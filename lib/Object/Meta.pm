@@ -51,14 +51,12 @@ It does not require lengthly creation of definition modules.
 
 =over 4
 
-=item new ( [ INDEX_VALUE | DATA ] )
+=item new ( [ DATA ] )
 
 This is the constructor for a new C<Object::Meta> object.
 
-C<INDEX_VALUE> - is a single scalar value for the B<Index Field> by which the object will be indexed.
-This is only effective when the B<Index Field> is already configured.
-
-C<DATA> - is passed in a hash like fashion, using key and value pairs.
+C<DATA> - is B<physical data> which is passed in a hash like fashion,
+using key and value pairs.
 
 =back
 
@@ -74,14 +72,10 @@ sub new {
     #Bestow Objecthood
     bless $self, $class;
 
-    if ( scalar(@_) > 2 ) {
+    if ( scalar(@_) > 1 ) {
 
         #Parameters are a Key / Value List
         Object::Meta::set( $self, @_[ 1 .. $#_ ] );
-    }
-    else {
-        #Parameter is a single Value
-        Object::Meta::setIndexValue( $self, $_[1] );
     }
 
     #Give the Object back
@@ -179,12 +173,27 @@ sub setIndexField {
 
 }
 
+=pod
+
+=over 4
+
+=item setIndexValue ( INDEX_VALUE )
+
+This Method assigns the value for the B<Index Field> for this object.
+
+C<INDEX_VALUE> - is the scalar value of the Field by which the object will be indexed.
+
+=back
+
+=cut
+
+
 sub setIndexValue {
     my ( $self, $sindexvalue ) = @_;
     my $sindexfield = Object::Meta::getIndexField $self;
 
     if ( defined $sindexvalue
-        && $sindexfield ne "" )
+        && $sindexfield ne '' )
     {
         Object::Meta::set( $self, $sindexfield, $sindexvalue );
     }    #if(defined $sindexvalue && $sindexfield ne "")
