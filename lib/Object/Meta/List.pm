@@ -1,6 +1,6 @@
 #
 # @author Bodo (Hugo) Barwich
-# @version 2023-03-30
+# @version 2023-04-08
 # @package Indexed List
 # @subpackage Object/Meta/List.pm
 
@@ -18,6 +18,13 @@
 
 #==============================================================================
 # The Object::Meta::List Package
+
+=head1 NAME
+
+Object::Meta::List - Library to access C<Object::Meta> objects by B<Index Value>
+and by insertion order.
+
+=cut
 
 package Object::Meta::List;
 
@@ -216,136 +223,6 @@ sub _indexMetaObject {
     }    #if(defined $mtaety && $mtaety->isa("MetaEntry"))
 }
 
-#  /**
-#   * This Method configures an Index which organizes the DBEntry Objects according to the
-#   * Value of a given Field.<br />
-#   * After configuring the Index it builds it by calling the Method
-#   * DBEntryList::buildIndex()<br />
-#   * If <b>$sindexname</b> is empty the Index Name will automatically build and assigned.
-#   * It will be a combination of <b>$sfieldname</b> and <b>$sfieldvalue</b> if set.<br />
-#   * If <b>$sfieldvalue</b> is set the Index will contain the DBEntry Objects
-#   * that have the given Value $sfieldvalue at the given Field $sfieldname.
-#   * If $sfieldvalue is not set the Values of the DBEntry Objects must be unique or
-#   * the Index will implode duplicate DBEntry Objects and skipping first duplicate DBEntry Objects.<br />
-#   * If <b>$bsubset</b> is set the Index could contain only a Part of all DBEntry Objects
-#   * in the List. This will prevent the Index from rechecked automatically.
-#   * If <b>$sfieldvalue</b> is set it will be automatically activated.<br />
-#   * This will add an Index Structure to the Meta Field <b>"indexconfiguration"</b> with
-#   * these Fields:<br />
-#   * - <b>indexconfiguration[\*name\*]["name"]</b>: The Name of the Index
-#   * - <b>indexconfiguration[\*name\*]["fieldname"]</b>: The Name of the Entry Field
-#   * - <b>indexconfiguration[\*name\*]["fieldvalue"]</b>: A required Value of the Entry Field
-#   * for the DBEntry Object to be indexed
-#   * - <b>indexconfiguration[\*name\*]["meta"]</b>: Whether the Field is a Meta Field   *
-#   * @param string $sindexname The Index Name. If left empty automatically a Name will be assigned.
-#   * @param string $sfieldname The Field Name where to index
-#   * @param string $sfieldvalue The Field Value a DBEntry Object must have to be indexed
-#   * @param boolean $bmeta Indicates whether the Field is a Meta Data Field.
-#   * @param boolean $bsubset Indicates whether only a Part of all DBEntry Objects will be indexed
-#   * @param boolean $brebuild Indicates whether the Index must be rebuild
-#   * @see DBEntryList::buildIndex()
-#   */
-#  function createIndex($sindexname, $sfieldname, $sfieldvalue = ""
-#    , $bmeta = false, $bsubset = false, $brebuild = false)
-#  {
-#//    echo __METHOD__ . " in - fld nm: '$sfieldname'; fld vl: '$sfieldvalue'; "
-#//      . "mta: '" . (int)$bmeta . "; 'set: '" . (int)$bsubset . "'; 'rebld: '" . (int)$brebuild . "'\n";
-#
-#    if($sfieldname !== "")
-#    {
-#      $arridxcnfs = $this->getMetaData("indexconfiguration", array());
-#      $sidxnm = $sindexname;
-#      $bupdidxcnf = false;
-#
-#
-#      if($sidxnm === "")
-#      {
-#        $sidxnm = $sfieldname;
-#
-#        if($sfieldvalue !== "")
-#          $sidxnm .= "_" . $sfieldvalue;
-#
-#      } //if($sidxnm === "")
-#
-#      if(isset($sfieldvalue)
-#        && $sfieldvalue !== "")
-#        $bsubset = true;
-#
-#      if(isset($arridxcnfs)
-#        && is_array($arridxcnfs))
-#        if(isset($arridxcnfs[$sidxnm]))
-#        {
-#          if(!isset($arridxcnfs[$sidxnm]["name"])
-#            || $arridxcnfs[$sidxnm]["name"] != $sidxnm)
-#          {
-#            $arridxcnfs[$sidxnm]["name"] = $sidxnm;
-#            $bupdidxcnf = true;
-#          } //if(!isset($arridxcnfs[$sidxnm]["name"])
-#            //  || $arridxcnfs[$sidxnm]["name"] != $sidxnm)
-#
-#          if(!isset($arridxcnfs[$sidxnm]["fieldname"])
-#            || $arridxcnfs[$sidxnm]["fieldname"] != $sfieldname)
-#          {
-#            $arridxcnfs[$sidxnm]["fieldname"] = $sfieldname;
-#            $bupdidxcnf = true;
-#          } //if(!isset($arridxcnfs[$sidxnm]["entryfield"])
-#            //  || $arridxcnfs[$sidxnm]["fieldname"] != $sfieldname)
-#
-#          if(!isset($arridxcnfs[$sidxnm]["fieldvalue"])
-#            || $arridxcnfs[$sidxnm]["fieldvalue"] != $sfieldvalue)
-#          {
-#            $arridxcnfs[$sidxnm]["fieldvalue"] = $sfieldvalue;
-#            $bupdidxcnf = true;
-#          } //if(!isset($arridxcnfs[$sidxnm]["fieldvalue"])
-#            //  || $arridxcnfs[$sidxnm]["fieldvalue"] != $sfieldvalue)
-#
-#          if(!isset($arridxcnfs[$sidxnm]["meta"])
-#            || $arridxcnfs[$sidxnm]["meta"] != $bmeta)
-#          {
-#            $arridxcnfs[$sidxnm]["meta"] = $bmeta;
-#            $bupdidxcnf = true;
-#          } //if(!isset($arridxcnfs[$sidxnm]["meta"])
-#            //  || $arridxcnfs[$sidxnm]["meta"] != $bmeta)
-#
-#          if(!isset($arridxcnfs[$sidxnm]["subset"])
-#            || $arridxcnfs[$sidxnm]["subset"] != $bsubset)
-#          {
-#            $arridxcnfs[$sidxnm]["subset"] = $bsubset;
-#            $bupdidxcnf = true;
-#          } //if(!isset($arridxcnfs[$sidxnm]["meta"]))
-#
-#          if(!isset($arridxcnfs[$sidxnm]["count"]))
-#          {
-#            $arridxcnfs[$sidxnm]["count"] = 0;
-#            $bupdidxcnf = true;
-#          } //if(!isset($arridxcnfs[$sidxnm]["count"]))
-#        }
-#        else  //The Index Configuration is new
-#        {
-#          $bupdidxcnf = true;
-#
-#          $arridxcnfs[$sidxnm]["name"] = $sidxnm;
-#          $arridxcnfs[$sidxnm]["fieldname"] = $sfieldname;
-#          $arridxcnfs[$sidxnm]["fieldvalue"] = $sfieldvalue;
-#          $arridxcnfs[$sidxnm]["meta"] = $bmeta;
-#          $arridxcnfs[$sidxnm]["subset"] = $bsubset;
-#          $arridxcnfs[$sidxnm]["count"] = 0;
-#        } //if(!isset($arridxcnfs[$sidxnm]))
-#
-#      if($bupdidxcnf)
-#      {
-#        $this->setMetaData("indexconfiguration", $arridxcnfs);
-#
-#        $brebuild = true;
-#      } //if($bupdidxcnf)
-#
-#      //Build the Index and fill it with DBEntry Objects
-#      $this->buildIndex($sidxnm, $brebuild);
-#
-#    }  //if($sfieldname !== "")
-#
-#  }  //function createIndex($sfieldname)
-
 sub createIndex {
     my $self = shift;
 
@@ -471,161 +348,6 @@ sub createIndex {
 
     }    #if($hshprms{"checkfield"} ne "")
 }
-
-#  /**
-#   * This Method will actually build the Index and organize the DBEntry Objects in it.<br />
-#   * It requires the previous call of DBEntryList::createIndex() to configure the Index.<br />
-#   * @param string $sindexname The Index Name which was previously configured
-#   * @param boolean $brebuild Indicates whether the Index must be rebuild
-#   * @see DBEntryList::createIndex()
-#   */
-#  function buildIndex($sindexname, $brebuild = false)
-#  {
-#    //echo __METHOD__ . " - idx: '$sindexname', rbd: '" . (int)$brebuild . "'. go ...\n";
-#
-#    if(isset($sindexname)
-#      && $sindexname !== "")
-#    {
-#      $arridxcnfs = $this->getMetaData("indexconfiguration", array());
-#      $sfldnm = "";
-#      $sfldvl = "";
-#      $iidxcnt = -1;
-#      $bmta = false;
-#      $bsbset = false;
-#      $bupdidxcnf = false;
-#
-#
-#      if(isset($arridxcnfs[$sindexname]))
-#      {
-#        if(isset($arridxcnfs[$sindexname]["fieldname"]))
-#          $sfldnm = $arridxcnfs[$sindexname]["fieldname"];
-#
-#        if($sfldnm === "")
-#          if(isset($arridxcnfs[$sindexname]["entryfield"]))
-#            $sfldnm = $arridxcnfs[$sindexname]["entryfield"];
-#
-#        if(isset($arridxcnfs[$sindexname]["fieldvalue"]))
-#          $sfldvl = $arridxcnfs[$sindexname]["fieldvalue"];
-#
-#        if(isset($arridxcnfs[$sindexname]["meta"]))
-#          $bmta = $arridxcnfs[$sindexname]["meta"];
-#
-#        if(isset($arridxcnfs[$sindexname]["subset"]))
-#          $bsbset = $arridxcnfs[$sindexname]["subset"];
-#
-#        if(isset($arridxcnfs[$sindexname]["count"]))
-#          $iidxcnt = $arridxcnfs[$sindexname]["count"];
-#
-#      } //if(isset($arridxcnfs[$sindexname]))
-#
-#      //echo "fld nm: '$sfldnm'; fld vl: '$sfldvl'; mta: '" . (int)$bmta . "'; set: '" . (int)$bsbset . "'\n";
-#
-#      if($sfldnm !== "")
-#      {
-#        $sidxvl = "";
-#        $ietycnt = $this->getDBEntryCount();
-#        //Check the Index when the List was updated
-#        $bbld = $this->isUpdated();
-#
-#        if($brebuild)
-#        {
-#          if(isset($this->arridxetys[$sindexname]))
-#          {
-#            unset($this->arridxetys[$sindexname]);
-#            $this->arridxetys[$sindexname] = array();
-#          } //if(isset($this->arridxetys[$sidxnm]))
-#
-#          $iidxcnt = 0;
-#          $bupdidxcnf = true;
-#
-#          //Check the Index
-#          $bbld = true;
-#        } //if($brebuild)
-#
-#        if(isset($this->arridxetys[$sindexname]))
-#        {
-#          if($iidxcnt < 0)
-#            //Check the Index
-#            $bbld = true;
-#
-#        }
-#        else  //The Index still doesn't exist
-#        {
-#          $this->arridxetys[$sindexname] = array();
-#
-#          //Check the Index
-#          $bbld = true;
-#        }  //if(!isset($this->arridxetys[$sindexname]))
-#
-#        if(!$bsbset)
-#          $bbld = ($bbld || $ietycnt != $iidxcnt);
-#
-#        //echo "ety cnt: '$ietycnt'; idx ety cnt: '$iidxcnt'; bld: '" . (int)$bbld . "'\n";
-#
-#        if($bbld)
-#        {
-#          if($ietycnt > 0)
-#          {
-#            $ety = NULL;
-#            $ilstetyid = -1;
-#            $slstfldvl = NULL;
-#            $iidxcnt = 0;
-#
-#
-#            for($iety = 0; $iety < $ietycnt; $iety++)
-#            {
-#              $ety = $this->arretys[$iety];
-#              $sidxvl = "";
-#
-#              if(isset($ety))
-#              {
-#                $ilstetyid = $ety->getID();
-#                $slstfldvl = $ety->get($sfldnm, NULL, $bmta);
-#
-#                if(isset($slstfldvl)
-#                  && $slstfldvl !== "")
-#                {
-#                  if($sfldvl !== "")
-#                  {
-#                    if($slstfldvl == $sfldvl
-#                      && isset($ilstetyid))
-#                      $sidxvl = $ilstetyid;
-#
-#                  }
-#                  else  //if($sfldvl !== "")
-#                    $sidxvl = $slstfldvl;
-#
-#                } //if(isset($slstfldvl) && $slstfldvl !== "")
-#
-#                //echo "idx nm: '$sindexname'; fld nm: '$sfldnm'; fld vl: '$slstfldvl'; idx vl: '$sidxvl'\n";
-#
-#                if($sidxvl !== "")
-#                  if(!isset($this->arridxetys[$sindexname][$sidxvl]))
-#                  {
-#                    $this->arridxetys[$sindexname][$sidxvl] = $ety;
-#
-#                    //Count the Entries
-#                    $iidxcnt += 1;
-#
-#                    if(!$bupdidxcnf)
-#                      $bupdidxcnf = true;
-#
-#                  }  //if(!isset($this->arridxetys[$sindexname][$sidxvl]))
-#
-#              } //if(isset($ety))
-#            } //for($iety = 0; $iety < $ietycnt; $iety++)
-#          } //if($ietycnt > 0)
-#        } //if($bbld)
-#      } //if($sfldnm !== "")
-#
-#      if($bupdidxcnf)
-#      {
-#        $arridxcnfs[$sindexname]["count"] = $iidxcnt;
-#
-#        $this->setMetaData("indexconfiguration", $arridxcnfs);
-#      } //if($bupdidxcnf)
-#    } //if(isset($sindexname) && $sindexname !== "")
-#  }
 
 sub buildIndex {
     my $self       = shift;

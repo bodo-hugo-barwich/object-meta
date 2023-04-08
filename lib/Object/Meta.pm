@@ -1,6 +1,6 @@
 #
 # @author Bodo (Hugo) Barwich
-# @version 2023-03-30
+# @version 2023-04-08
 # @package Indexed List
 # @subpackage Object/Meta.pm
 
