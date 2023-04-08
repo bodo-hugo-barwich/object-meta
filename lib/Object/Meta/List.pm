@@ -2,12 +2,13 @@
 # @author Bodo (Hugo) Barwich
 # @version 2023-03-30
 # @package Indexed List
-# @subpackage lib/Object/Meta/List.pm
+# @subpackage Object/Meta/List.pm
 
 # This Module defines Classes to manage Data in an indexed List
 #
 #---------------------------------
 # Requirements:
+# - The Perl Package "libconst-fast-perl" must be installed
 #
 #---------------------------------
 # Features:
@@ -15,10 +16,8 @@
 # - Adding a Object::Meta Object to the Object::Meta::List by the Index Value
 #
 
-
 #==============================================================================
 # The Object::Meta::List Package
-
 
 package Object::Meta::List;
 
@@ -29,216 +28,192 @@ use parent 'Object::Meta';
 
 use Scalar::Util 'blessed';
 
-use constant LIST_ENTRIES => 2;
+use constant LIST_ENTRIES         => 2;
 use constant LIST_ENTRIES_INDEXED => 3;
 
 use constant PRIMARY_INDEXNAME => 'primary';
 
-
-
 #----------------------------------------------------------------------------
 #Constructors
 
+sub new {
+    my $class = ref( $_[0] ) || $_[0];
 
-sub new
-{
-  my $class = ref($_[0]) || $_[0];
+    my $self = $class->SUPER::new( @_[ 1 .. $#_ ] );
 
-  my $self = $class->SUPER::new(@_[1..$#_]);
+    #Create the additional Entry Lists
+    $self->[LIST_ENTRIES]         = ();
+    $self->[LIST_ENTRIES_INDEXED] = ();
 
-
-  #Create the additional Entry Lists
-  $self->[LIST_ENTRIES] = ();
-  $self->[LIST_ENTRIES_INDEXED] = ();
-
-
-  #Give the Object back
-  return $self;
+    #Give the Object back
+    return $self;
 }
 
-sub DESTROY
-{
-  my $self = $_[0];
+sub DESTROY {
+    my $self = $_[0];
 
+    #Free the Entry Lists
+    $self->[LIST_ENTRIES]         = ();
+    $self->[LIST_ENTRIES_INDEXED] = ();
 
-  #Free the Entry Lists
-  $self->[LIST_ENTRIES] = ();
-  $self->[LIST_ENTRIES_INDEXED] = ();
-
-  #Call Base Class Destructor
-  $self->SUPER::DESTROY;
+    #Call Base Class Destructor
+    $self->SUPER::DESTROY;
 }
-
-
 
 #----------------------------------------------------------------------------
 #Administration Methods
 
+sub setIndexField {
+    my ( $self, $sindexname, $sindexfield ) = @_;
 
-sub setIndexField
-{
-  my ($self, $sindexname, $sindexfield) = @_;
+    unless ( defined $sindexfield ) {
+        $sindexfield = $sindexname;
+        $sindexname  = PRIMARY_INDEXNAME;
+    }
 
+#print "'" . (caller(1))[3] . "' : Signal to '" . (caller(0))[3] . "'\n";
+#print "" . (caller(0))[3] . " - idx nm: '$sindexname'; idx fld: '$sindexfield'\n";
 
-  unless(defined $sindexfield)
-  {
-    $sindexfield = $sindexname;
-    $sindexname = PRIMARY_INDEXNAME;
-  }
-
-  #print "'" . (caller(1))[3] . "' : Signal to '" . (caller(0))[3] . "'\n";
-  #print "" . (caller(0))[3] . " - idx nm: '$sindexname'; idx fld: '$sindexfield'\n";
-
-  if(defined $sindexfield
-    && $sindexfield ne "")
-  {
-    $self->createIndex(("indexname" => $sindexname, "checkfield" => $sindexfield));
-  }
+    if ( defined $sindexfield
+        && $sindexfield ne "" )
+    {
+        $self->createIndex(
+            ( "indexname" => $sindexname, "checkfield" => $sindexfield ) );
+    }
 }
 
-sub Add
-{
-  my $self = $_[0];
-  my $mtaety = undef;
+sub Add {
+    my $self   = $_[0];
+    my $mtaety = undef;
 
+    if ( scalar(@_) > 1 ) {
+        if ( defined blessed $_[1] ) {
+            $mtaety = $_[1];
+        }
+        else    #Parameter is not an Object
+        {
+            if ( scalar(@_) > 2 ) {
 
-  if(scalar(@_) > 1)
-  {
-    if(defined blessed $_[1])
+                #Create the new MetaEntry Object from the given Parameters
+                $mtaety = Object::Meta::->new( @_[ 1 .. $#_ ] );
+            }
+            else    #A Single Scalar Parameter
+            {
+                #Create the new MetaEntry Object with the Index Value
+                $mtaety = Object::Meta::->new( $self->getIndexField, $_[1] );
+            }
+        }    #if(defined blessed $_[1])
+    }    #if(scalar(@_) > 1)
+
+    if ( defined $mtaety ) {
+        unless ( $mtaety->isa("Object::Meta") ) {
+            $mtaety = undef;
+        }
+    }    #if(defined $mtaety)
+
+    $mtaety = Object::Meta::->new unless ( defined $mtaety );
+
+    if ( defined $mtaety
+        && $mtaety->isa("MetaEntry") )
     {
-      $mtaety = $_[1] ;
-    }
-    else  #Parameter is not an Object
-    {
-      if(scalar(@_) > 2)
-      {
-        #Create the new MetaEntry Object from the given Parameters
-        $mtaety = Object::Meta::->new(@_[1..$#_]);
-      }
-      else  #A Single Scalar Parameter
-      {
-        #Create the new MetaEntry Object with the Index Value
-        $mtaety = Object::Meta::->new($self->getIndexField, $_[1]);
-      }
-    } #if(defined blessed $_[1])
-  } #if(scalar(@_) > 1)
+        my $ietycnt = $self->getMetaEntryCount;
 
-  if(defined $mtaety)
-  {
-    unless($mtaety->isa("Object::Meta"))
-    {
-      $mtaety = undef;
-    }
-  } #if(defined $mtaety)
+        push @{ $self->[LIST_ENTRIES] }, ($mtaety);
 
-  $mtaety = Object::Meta::->new unless(defined $mtaety);
+        $ietycnt = 0 if ( $ietycnt < 0 );
 
-  if(defined $mtaety
-    && $mtaety->isa("MetaEntry"))
-  {
-    my $ietycnt = $self->getMetaEntryCount;
+        #Update the MetaEntry Count
+        $self->setMeta( "entrycount", $ietycnt + 1 );
 
+        #Add the the MetaEntry Object to the Index Lists
+        $self->_indexMetaEntry($mtaety);
 
-    push @{$self->[LIST_ENTRIES]}, ($mtaety);
+    }    #if(defined $mtaety && $mtaety->isa("Object::Meta"))
 
-    $ietycnt = 0 if($ietycnt < 0);
-
-    #Update the MetaEntry Count
-    $self->setMeta("entrycount", $ietycnt + 1);
-
-    #Add the the MetaEntry Object to the Index Lists
-    $self->_indexMetaEntry($mtaety);
-
-  } #if(defined $mtaety && $mtaety->isa("Object::Meta"))
-
-
-  #Give the added MetaEntry Object back
-  return $mtaety;
+    #Give the added MetaEntry Object back
+    return $mtaety;
 }
 
-sub _indexMetaObject
-{
-  my ($self, $mtaety) = @_;
+sub _indexMetaObject {
+    my ( $self, $mtaety ) = @_;
 
-
-  if(defined $mtaety
-    && $mtaety->isa('Object::Meta'))
-  {
-    my $hshidxcnfs = $self->getMeta('indexconfiguration', {});
-    my $hshidxcnf = undef;
-    my $iupdidxcnf = 0;
-
-    my $slstmnidxvl = "";
-    my $slstidxfld = "";
-    my $slstidxvl = "";
-    my $slstchkvl = "";
-
-
-    foreach (keys %{$hshidxcnfs})
+    if ( defined $mtaety
+        && $mtaety->isa('Object::Meta') )
     {
-      $hshidxcnf = $hshidxcnfs->{$_};
+        my $hshidxcnfs = $self->getMeta( 'indexconfiguration', {} );
+        my $hshidxcnf  = undef;
+        my $iupdidxcnf = 0;
 
-      if(defined $hshidxcnf)
-      {
-        $mtaety->setIndexField($hshidxcnf->{"indexfield"})
-          if($hshidxcnf->{"name"} eq PRIMARY_INDEXNAME);
+        my $slstmnidxvl = "";
+        my $slstidxfld  = "";
+        my $slstidxvl   = "";
+        my $slstchkvl   = "";
 
-        $slstmnidxvl = $mtaety->get($hshidxcnf->{"indexfield"}, undef);
-        $slstchkvl = $mtaety->get($hshidxcnf->{"checkfield"}, undef, $hshidxcnf->{"meta"});
-        $slstidxvl = "";
+        foreach ( keys %{$hshidxcnfs} ) {
+            $hshidxcnf = $hshidxcnfs->{$_};
 
+            if ( defined $hshidxcnf ) {
+                $mtaety->setIndexField( $hshidxcnf->{"indexfield"} )
+                  if ( $hshidxcnf->{"name"} eq PRIMARY_INDEXNAME );
 
-        if(defined $slstchkvl
-          && $slstchkvl ne "")
-        {
-          if($hshidxcnf->{"checkvalue"} ne "")
-          {
-            $slstidxvl = $slstmnidxvl
-              if("$slstchkvl" eq $hshidxcnf->{"checkvalue"} . ""
-                && defined $slstmnidxvl);
+                $slstmnidxvl =
+                  $mtaety->get( $hshidxcnf->{"indexfield"}, undef );
+                $slstchkvl = $mtaety->get( $hshidxcnf->{"checkfield"},
+                    undef, $hshidxcnf->{"meta"} );
+                $slstidxvl = "";
 
-          }
-          else  #Its not a by Value Index
-          {
-            $slstidxvl = $slstmnidxvl;
-          }  #if($hshidxcnf->{"checkvalue"} ne "")
-        } #if(defined $slstchkvl && $slstchkvl ne "")
+                if ( defined $slstchkvl
+                    && $slstchkvl ne "" )
+                {
+                    if ( $hshidxcnf->{"checkvalue"} ne "" ) {
+                        $slstidxvl = $slstmnidxvl
+                          if ( "$slstchkvl" eq $hshidxcnf->{"checkvalue"} . ""
+                            && defined $slstmnidxvl );
 
-        #print "idx nm: '$sindexname'; chk fld: '$sfldnm'; fld vl: '$slstchkvl'; idx vl: '$sidxvl'\n";
+                    }
+                    else    #Its not a by Value Index
+                    {
+                        $slstidxvl = $slstmnidxvl;
+                    }       #if($hshidxcnf->{"checkvalue"} ne "")
+                }    #if(defined $slstchkvl && $slstchkvl ne "")
 
-        if($slstidxvl ne "")
-        {
-          $self->[LIST_ENTRIES_INDEXED]{$hshidxcnf->{"name"}} = ()
-            unless(defined $self->[LIST_ENTRIES_INDEXED]{$hshidxcnf->{"name"}});
+#print "idx nm: '$sindexname'; chk fld: '$sfldnm'; fld vl: '$slstchkvl'; idx vl: '$sidxvl'\n";
 
-          unless(defined $self->[LIST_ENTRIES_INDEXED]{$hshidxcnf->{"name"}}{$slstidxvl})
-          {
-            $self->[LIST_ENTRIES_INDEXED]{$hshidxcnf->{"name"}}{$slstidxvl} = $mtaety;
+                if ( $slstidxvl ne "" ) {
+                    $self->[LIST_ENTRIES_INDEXED]{ $hshidxcnf->{"name"} } = ()
+                      unless (
+                        defined $self->[LIST_ENTRIES_INDEXED]
+                        { $hshidxcnf->{"name"} } );
 
-            #Count the Entries
-            if(defined $hshidxcnf->{"count"}
-              && $hshidxcnf->{"count"} > 0)
-            {
-              $hshidxcnf->{"count"}++;
-            }
-            else
-            {
-              $hshidxcnf->{"count"} = 1;
-            }
+                    unless (
+                        defined $self->[LIST_ENTRIES_INDEXED]
+                        { $hshidxcnf->{"name"} }{$slstidxvl} )
+                    {
+                        $self->[LIST_ENTRIES_INDEXED]{ $hshidxcnf->{"name"} }
+                          {$slstidxvl} = $mtaety;
 
-            $iupdidxcnf = 1 unless($iupdidxcnf);
+                        #Count the Entries
+                        if ( defined $hshidxcnf->{"count"}
+                            && $hshidxcnf->{"count"} > 0 )
+                        {
+                            $hshidxcnf->{"count"}++;
+                        }
+                        else {
+                            $hshidxcnf->{"count"} = 1;
+                        }
 
-          }  #unless(defined $self->{"_list_entries_indexed"}{$hshidxcnf->{"name"}}{$slstidxvl})
-        } #if($sidxvl ne "")
+                        $iupdidxcnf = 1 unless ($iupdidxcnf);
 
-      } #if(defined $hshidxcnf)
-    }  #foreach (keys %{$hshidxcnfs})
+                    } #unless(defined $self->{"_list_entries_indexed"}{$hshidxcnf->{"name"}}{$slstidxvl})
+                }    #if($sidxvl ne "")
 
-    if($iupdidxcnf)
-    {
-      $self->setMeta("indexconfiguration", $hshidxcnfs)
-    } #if($iupdidxcnf)
-  } #if(defined $mtaety && $mtaety->isa("MetaEntry"))
+            }    #if(defined $hshidxcnf)
+        }    #foreach (keys %{$hshidxcnfs})
+
+        if ($iupdidxcnf) {
+            $self->setMeta( "indexconfiguration", $hshidxcnfs );
+        }    #if($iupdidxcnf)
+    }    #if(defined $mtaety && $mtaety->isa("MetaEntry"))
 }
 
 #  /**
@@ -371,134 +346,131 @@ sub _indexMetaObject
 #
 #  }  //function createIndex($sfieldname)
 
-sub createIndex
-{
-  my $self = shift;
+sub createIndex {
+    my $self = shift;
 
-  #Take the Method Parameters and set Default Values
-  my %hshprms = ("indexname" => "", "indexfield" => ""
-    , "checkfield" => "", "checkvalue" => ""
-    , "meta" => 0, "subset" => 0, "rebuild" => 0
-    , @_);
+    #Take the Method Parameters and set Default Values
+    my %hshprms = (
+        "indexname"  => "",
+        "indexfield" => "",
+        "checkfield" => "",
+        "checkvalue" => "",
+        "meta"       => 0,
+        "subset"     => 0,
+        "rebuild"    => 0,
+        @_
+    );
 
+    if ( $hshprms{"checkfield"} ne "" ) {
+        my $hshidxcnfs = $self->getMeta( "indexconfiguration", {} );
+        my $sidxnm     = $hshprms{"indexname"};
+        my $iupdidxcnf = 0;
 
+        unless ( defined $sidxnm
+            && $sidxnm ne "" )
+        {
+            $sidxnm = $hshprms{"checkfield"};
 
-  if($hshprms{"checkfield"} ne "")
-  {
-    my $hshidxcnfs = $self->getMeta("indexconfiguration", {});
-    my $sidxnm = $hshprms{"indexname"};
-    my $iupdidxcnf = 0;
+            $sidxnm .= "_" . $hshprms{"checkvalue"}
+              if ( defined $hshprms{"checkvalue"}
+                && $hshprms{"checkvalue"} ne "" );
 
+        }    #unless(defined $sidxnm && $sidxnm ne "")
 
-    unless(defined $sidxnm
-      && $sidxnm ne "")
-    {
-      $sidxnm = $hshprms{"checkfield"};
+        unless ( defined $hshprms{"indexfield"}
+            && $hshprms{"indexfield"} ne "" )
+        {
+            if ( defined $hshprms{"checkvalue"}
+                && $hshprms{"checkvalue"} ne "" )
+            {
+                $hshprms{"indexfield"} = $self->getIndexField;
+            }
+            else {
+                $hshprms{"indexfield"} = $hshprms{"checkfield"};
+            }
+        } #unless(defined $hshprms{"indexfield"} && $hshprms{"indexfield"} ne "")
 
-      $sidxnm .= "_" . $hshprms{"checkvalue"}
-        if(defined $hshprms{"checkvalue"}
-          && $hshprms{"checkvalue"} ne "");
+        $hshprms{"subset"} = 1
+          if ( defined $hshprms{"checkvalue"}
+            && $hshprms{"checkvalue"} ne "" );
 
-    } #unless(defined $sidxnm && $sidxnm ne "")
+        %{$hshidxcnfs} = () unless ( defined $hshidxcnfs );
 
-    unless(defined $hshprms{"indexfield"}
-      && $hshprms{"indexfield"} ne "")
-    {
-      if(defined $hshprms{"checkvalue"}
-        && $hshprms{"checkvalue"} ne "")
-      {
-        $hshprms{"indexfield"} = $self->getIndexField;
-      }
-      else
-      {
-        $hshprms{"indexfield"} = $hshprms{"checkfield"};
-      }
-    } #unless(defined $hshprms{"indexfield"} && $hshprms{"indexfield"} ne "")
+        if ( defined $hshidxcnfs->{$sidxnm} ) {
+            unless ( defined $hshidxcnfs->{$sidxnm}{"name"}
+                && $hshidxcnfs->{$sidxnm}{"name"} eq $sidxnm )
+            {
+                $hshidxcnfs->{$sidxnm}{"name"} = $sidxnm;
+                $iupdidxcnf = 1;
+            }
 
-    $hshprms{"subset"} = 1
-      if(defined $hshprms{"checkvalue"}
-        && $hshprms{"checkvalue"} ne "");
+            unless ( defined $hshidxcnfs->{$sidxnm}{"indexfield"}
+                && $hshidxcnfs->{$sidxnm}{"indexfield"} eq
+                $hshprms{"indexfield"} )
+            {
+                $hshidxcnfs->{$sidxnm}{"indexfield"} = $hshprms{"indexfield"};
+                $iupdidxcnf = 1;
+            }
 
-    %{$hshidxcnfs} = () unless(defined $hshidxcnfs);
+            unless ( defined $hshidxcnfs->{$sidxnm}{"checkfield"}
+                && $hshidxcnfs->{$sidxnm}{"checkfield"} eq
+                $hshprms{"checkfield"} )
+            {
+                $hshidxcnfs->{$sidxnm}{"checkfield"} = $hshprms{"checkfield"};
+                $iupdidxcnf = 1;
+            }
 
-    if(defined $hshidxcnfs->{$sidxnm})
-    {
-      unless(defined $hshidxcnfs->{$sidxnm}{"name"}
-        && $hshidxcnfs->{$sidxnm}{"name"} eq $sidxnm)
-      {
-        $hshidxcnfs->{$sidxnm}{"name"} = $sidxnm;
-        $iupdidxcnf = 1;
-      }
+            unless ( defined $hshidxcnfs->{$sidxnm}{"checkvalue"}
+                && $hshidxcnfs->{$sidxnm}{"checkvalue"} eq
+                $hshprms{"checkvalue"} )
+            {
+                $hshidxcnfs->{$sidxnm}{"checkvalue"} = $hshprms{"checkvalue"};
+                $iupdidxcnf = 1;
+            }
 
-      unless(defined $hshidxcnfs->{$sidxnm}{"indexfield"}
-        && $hshidxcnfs->{$sidxnm}{"indexfield"} eq $hshprms{"indexfield"})
-      {
-        $hshidxcnfs->{$sidxnm}{"indexfield"} = $hshprms{"indexfield"};
-        $iupdidxcnf = 1;
-      }
+            unless ( defined $hshidxcnfs->{$sidxnm}{"meta"}
+                && $hshidxcnfs->{$sidxnm}{"meta"} == $hshprms{"meta"} )
+            {
+                $hshidxcnfs->{$sidxnm}{"meta"} = $hshprms{"meta"};
+                $iupdidxcnf = 1;
+            }
 
-      unless(defined $hshidxcnfs->{$sidxnm}{"checkfield"}
-        && $hshidxcnfs->{$sidxnm}{"checkfield"} eq $hshprms{"checkfield"})
-      {
-        $hshidxcnfs->{$sidxnm}{"checkfield"} = $hshprms{"checkfield"};
-        $iupdidxcnf = 1;
-      }
+            unless ( defined $hshidxcnfs->{$sidxnm}{"subset"}
+                && $hshidxcnfs->{$sidxnm}{"subset"} == $hshprms{"subset"} )
+            {
+                $hshidxcnfs->{$sidxnm}{"subset"} = $hshprms{"subset"};
+                $iupdidxcnf = 1;
+            }
 
-      unless(defined $hshidxcnfs->{$sidxnm}{"checkvalue"}
-        && $hshidxcnfs->{$sidxnm}{"checkvalue"} eq $hshprms{"checkvalue"})
-      {
-        $hshidxcnfs->{$sidxnm}{"checkvalue"} = $hshprms{"checkvalue"};
-        $iupdidxcnf = 1;
-      }
+            unless ( defined $hshidxcnfs->{$sidxnm}{"count"} ) {
+                $hshidxcnfs->{$sidxnm}{"count"} = 0;
+                $iupdidxcnf = 1;
+            }
+        }
+        else    #The Index Definition does not exist yet
+        {
+            $iupdidxcnf = 1;
 
-      unless(defined $hshidxcnfs->{$sidxnm}{"meta"}
-        && $hshidxcnfs->{$sidxnm}{"meta"} == $hshprms{"meta"})
-      {
-        $hshidxcnfs->{$sidxnm}{"meta"} = $hshprms{"meta"};
-        $iupdidxcnf = 1;
-      }
+            $hshidxcnfs->{$sidxnm}{"name"}       = $sidxnm;
+            $hshidxcnfs->{$sidxnm}{"indexfield"} = $hshprms{"indexfield"};
+            $hshidxcnfs->{$sidxnm}{"checkfield"} = $hshprms{"checkfield"};
+            $hshidxcnfs->{$sidxnm}{"checkvalue"} = $hshprms{"checkvalue"};
+            $hshidxcnfs->{$sidxnm}{"meta"}       = $hshprms{"meta"};
+            $hshidxcnfs->{$sidxnm}{"subset"}     = $hshprms{"subset"};
+            $hshidxcnfs->{$sidxnm}{"count"}      = 0;
+        }       #if(defined $hshidxcnfs->{$sidxnm})
 
-      unless(defined $hshidxcnfs->{$sidxnm}{"subset"}
-        && $hshidxcnfs->{$sidxnm}{"subset"} == $hshprms{"subset"})
-      {
-        $hshidxcnfs->{$sidxnm}{"subset"} = $hshprms{"subset"};
-        $iupdidxcnf = 1;
-      }
+        if ($iupdidxcnf) {
+            $self->setMeta( "indexconfiguration", $hshidxcnfs );
 
-      unless(defined $hshidxcnfs->{$sidxnm}{"count"})
-      {
-        $hshidxcnfs->{$sidxnm}{"count"} = 0;
-        $iupdidxcnf = 1;
-      }
-    }
-    else  #The Index Definition does not exist yet
-    {
-      $iupdidxcnf = 1;
+            $hshprms{"rebuild"} = 1;
+        }       #if($iupdidxcnf)
 
-      $hshidxcnfs->{$sidxnm}{"name"} = $sidxnm;
-      $hshidxcnfs->{$sidxnm}{"indexfield"} = $hshprms{"indexfield"};
-      $hshidxcnfs->{$sidxnm}{"checkfield"} = $hshprms{"checkfield"};
-      $hshidxcnfs->{$sidxnm}{"checkvalue"} = $hshprms{"checkvalue"};
-      $hshidxcnfs->{$sidxnm}{"meta"} = $hshprms{"meta"};
-      $hshidxcnfs->{$sidxnm}{"subset"} = $hshprms{"subset"};
-      $hshidxcnfs->{$sidxnm}{"count"} = 0;
-    } #if(defined $hshidxcnfs->{$sidxnm})
+        #Build the Index and fill it with MetaEntry Objects
+        $self->buildIndex( $sidxnm, $hshprms{"rebuild"} );
 
-    if($iupdidxcnf)
-    {
-      $self->setMeta("indexconfiguration", $hshidxcnfs);
-
-      $hshprms{"rebuild"} = 1;
-    } #if($iupdidxcnf)
-
-    #Build the Index and fill it with MetaEntry Objects
-    $self->buildIndex($sidxnm, $hshprms{"rebuild"});
-
-  } #if($hshprms{"checkfield"} ne "")
+    }    #if($hshprms{"checkfield"} ne "")
 }
-
-
-
 
 #  /**
 #   * This Method will actually build the Index and organize the DBEntry Objects in it.<br />
@@ -655,435 +627,391 @@ sub createIndex
 #    } //if(isset($sindexname) && $sindexname !== "")
 #  }
 
-sub buildIndex
-{
-  my $self = shift;
-  my $sindexname = shift;
-  my $irebuild = shift || 0;
+sub buildIndex {
+    my $self       = shift;
+    my $sindexname = shift;
+    my $irebuild   = shift || 0;
 
+    $sindexname = PRIMARY_INDEXNAME unless ( defined $sindexname );
 
-  $sindexname = PRIMARY_INDEXNAME unless(defined $sindexname);
+#print "" .(caller(0))[3] . " - idx: '$sindexname', rbd: '$irebuild'. go ...\n";
 
-  #print "" .(caller(0))[3] . " - idx: '$sindexname', rbd: '$irebuild'. go ...\n";
-
-  if(defined $sindexname
-    && $sindexname ne "")
-  {
-    my $hshidxcnfs = $self->getMeta("indexconfiguration", {});
-    my $hshidxcnf = undef;
-    my $sidxvl = "";
-    my $iidxcnt = -1;
-    my $iupdidxcnf = 0;
-
-
-    $hshidxcnf = $hshidxcnfs->{$sindexname}
-      if(defined $hshidxcnfs->{$sindexname});
-
-    if(defined $hshidxcnf
-      && defined $hshidxcnf->{"checkfield"})
+    if ( defined $sindexname
+        && $sindexname ne "" )
     {
-      unless(defined $hshidxcnf->{"indexfield"}
-        && $hshidxcnf->{"indexfield"} ne "")
-      {
-        $hshidxcnf->{"indexfield"} = $hshidxcnf->{"checkfield"};
+        my $hshidxcnfs = $self->getMeta( "indexconfiguration", {} );
+        my $hshidxcnf  = undef;
+        my $sidxvl     = "";
+        my $iidxcnt    = -1;
+        my $iupdidxcnf = 0;
 
-        $iupdidxcnf = 1;
-      }
+        $hshidxcnf = $hshidxcnfs->{$sindexname}
+          if ( defined $hshidxcnfs->{$sindexname} );
 
-      $iidxcnt = $hshidxcnf->{"count"}
-        if(defined $hshidxcnf->{"count"});
-
-    } #if(defined $hshidxcnf && defined $hshidxcnf->{"checkfield"})
-
-    #print "idx fld: '$sidxfld'; chk fld: '$schkfld'; chk vl: '$schkvl'"
-    #  . "; mta: '$imta'; set: '$isbset'\n";
-
-    if(defined $hshidxcnf
-      && defined $hshidxcnf->{"checkfield"}
-      && $hshidxcnf->{"checkfield"} ne "")
-    {
-      my $ietycnt = $self->getMetaEntryCount;
-      #Check the Index when the List was updated or when the Index was changed
-      my $ibld = $iupdidxcnf;
-
-
-      if($irebuild)
-      {
-        if(defined $self->[LIST_ENTRIES_INDEXED]{$sindexname})
+        if (   defined $hshidxcnf
+            && defined $hshidxcnf->{"checkfield"} )
         {
-          $self->[LIST_ENTRIES_INDEXED]{$sindexname} = ();
-        } #if(defined $self->{"_list_entries_indexed"}{$sindexname})
-
-        $iidxcnt = 0;
-        $iupdidxcnf = 1;
-
-        #Check the Index
-        $ibld = 1;
-      } #if($irebuild)
-
-      if(defined $self->[LIST_ENTRIES_INDEXED]{$sindexname})
-      {
-        #Check the Index
-        $ibld = 1 if($iidxcnt < 0);
-      }
-      else  #The Index still doesn't exist
-      {
-        $self->[LIST_ENTRIES_INDEXED]{$sindexname} = ();
-
-        #Check the Index
-        $ibld = 1;
-      }  #if(defined $self->{"_list_entries_indexed"}{$sindexname})
-
-      if($ietycnt > 0)
-      {
-        unless($hshidxcnf->{"subset"})
-        {
-          $ibld = 1 if($ibld || $ietycnt != $iidxcnt);
-        } #unless($hshidxcnf->{"subset"})
-      }
-      else  #There aren't any MetaEntries in the List
-      {
-        $ibld = 0;
-      } #if($ietycnt > 0)
-
-      #print "ety cnt: '$ietycnt'; idx ety cnt: '$iidxcnt'; bld: '$ibld'\n";
-
-      if($ibld)
-      {
-        my $ety = undef;
-        my $sidxvl = "";
-        my $slstetyidxvl = "";
-        my $slstchkvl = undef;
-        my $iety = -1;
-
-
-        $iidxcnt = 0;
-
-        for($iety = 0; $iety < $ietycnt; $iety++)
-        {
-          $ety = $self->[LIST_ENTRIES][$iety];
-          $sidxvl = "";
-
-          if(defined $ety)
-          {
-            $slstetyidxvl = $ety->get($hshidxcnf->{"indexfield"}, undef);
-            $slstchkvl = $ety->get($hshidxcnf->{"checkfield"}, undef, $hshidxcnf->{"meta"});
-
-            if(defined $slstchkvl
-              && $slstchkvl ne "")
+            unless ( defined $hshidxcnf->{"indexfield"}
+                && $hshidxcnf->{"indexfield"} ne "" )
             {
-              if($hshidxcnf->{"checkvalue"} ne "")
-              {
-                $sidxvl = $slstetyidxvl
-                  if("$slstchkvl" eq $hshidxcnf->{"checkvalue"} . ""
-                    && defined $slstetyidxvl);
+                $hshidxcnf->{"indexfield"} = $hshidxcnf->{"checkfield"};
 
-              }
-              else  #Its not a by Value Index
-              {
-                $sidxvl = $slstetyidxvl;
-              }  #if($sfldvl ne "")
-            } #if(defined $slstchkvl && $slstchkvl ne "")
-
-            #print "idx nm: '$sindexname'; chk fld: '$schkfld'; fld vl: '$slstchkvl'; idx vl: '$sidxvl'\n";
-
-            if($sidxvl ne "")
-            {
-              unless(defined $self->[LIST_ENTRIES_INDEXED]{$sindexname}{$sidxvl})
-              {
-                $self->[LIST_ENTRIES_INDEXED]{$sindexname}{$sidxvl} = $ety;
-
-                #Count the Entries
-                $iidxcnt++;
-
-                $iupdidxcnf = 1 unless($iupdidxcnf);
-
-              }  #unless(defined $self->[LIST_ENTRIES_INDEXED]{$sindexname}{$sidxvl})
-            } #if($sidxvl ne "")
-          } #if(defined $ety)
-        } #for($iety = 0; $iety < $ietycnt; $iety++)
-      } #if($ibld)
-    } #if(defined $hshidxcnf && defined $hshidxcnf->{"checkfield"}
-      # && $hshidxcnf->{"checkfield"} ne "")
-
-
-    if($iupdidxcnf)
-    {
-      $hshidxcnfs->{$sindexname}{"count"} = $iidxcnt;
-
-      $self->setMeta("indexconfiguration", $hshidxcnfs)
-    } #if($iupdidxcnf)
-  } #if(defined $sindexname && $sindexname ne "")
-
-}
-
-sub buildIndexAll
-{
-  my $self = shift;
-  my $irebuild = shift || 0;
-
-  my $ietycnt = $self->getMetaEntryCount;
-
-  my $hshidxcnfs = $self->getMeta("indexconfiguration", {});
-  my $hshidxcnf = undef;
-  my $sidxnm = "";
-  my $iidxcnt = -1;
-
-  my $ibld = 0;
-
-
-  if(scalar(keys %$hshidxcnfs) > 0)
-  {
-    foreach $sidxnm (keys %{$hshidxcnfs})
-    {
-      $hshidxcnf = $hshidxcnfs->{$sidxnm};
-
-      if(defined $hshidxcnf)
-      {
-        unless(defined $hshidxcnf->{"indexfield"}
-          && $hshidxcnf->{"indexfield"} ne "")
-        {
-          $hshidxcnf->{"indexfield"} = $hshidxcnf->{"checkfield"};
-
-          $ibld = 1;
-        } #unless(defined $hshidxcnf->{"indexfield"} && $hshidxcnf->{"indexfield"} ne "")
-
-        $iidxcnt = $hshidxcnf->{"count"}
-          if(defined $hshidxcnf->{"count"});
-
-      } #if(defined $hshidxcnf)
-
-      if($irebuild)
-      {
-        if(defined $self->[LIST_ENTRIES_INDEXED]{$sidxnm})
-        {
-          $self->[LIST_ENTRIES_INDEXED]{$sidxnm} = ();
-        } #if(defined $self->[LIST_ENTRIES_INDEXED]{$sidxnm})
-
-        $hshidxcnf->{"count"} = 0;
-
-        #Check the Index
-        $ibld = 1;
-      } #if($irebuild)
-
-      if(defined $self->[LIST_ENTRIES_INDEXED]{$sidxnm})
-      {
-        #Check the Index
-        $ibld = 1 if($iidxcnt < 0);
-      }
-      else  #The Index still doesn't exist
-      {
-        $self->[LIST_ENTRIES_INDEXED]{$sidxnm} = ();
-
-        #Check the Index
-        $ibld = 1;
-      }  #if(defined $self->{"_list_entries_indexed"}{$sidxnm})
-
-      if($ietycnt > 0)
-      {
-        unless($hshidxcnf->{"subset"})
-        {
-          $ibld = 1 if($ibld || $ietycnt != $iidxcnt);
-        } #unless($hshidxcnf->{"subset"})
-      } #if($ietycnt > 0)
-
-      #print "idx nm: '$sidxnm'; idx ety cnt: '$iidxcnt'; bld: '$ibld'\n";
-
-    } #foreach $sidxnm (keys %{$hshidxcnfs})
-
-  } #if(scalar(keys %$hshidxcnfs) > 0)
-
-  #print "ety cnt: '$ietycnt'; bld: '$ibld'\n";
-
-  if($ibld)
-  {
-    my $ety = undef;
-    my $sidxvl = "";
-    my $slstetyidxvl = "";
-    my $slstchkvl = undef;
-    my $iety = -1;
-
-
-    foreach $sidxnm (keys %{$hshidxcnfs})
-    {
-      $hshidxcnfs->{$sidxnm}{"count"} = 0;
-    }
-
-    for($iety = 0; $iety < $ietycnt; $iety++)
-    {
-      $ety = $self->[LIST_ENTRIES][$iety];
-      $sidxvl = "";
-
-      if(defined $ety)
-      {
-        foreach $sidxnm (keys %{$hshidxcnfs})
-        {
-          $hshidxcnf = $hshidxcnfs->{$sidxnm};
-
-          $slstetyidxvl = $ety->get($hshidxcnf->{"indexfield"}, undef);
-          $slstchkvl = $ety->get($hshidxcnf->{"checkfield"}, undef, $hshidxcnf->{"meta"});
-          $sidxvl = '';
-
-          if(defined $slstchkvl
-            && $slstchkvl ne "")
-          {
-            if($hshidxcnf->{"checkvalue"} ne "")
-            {
-              $sidxvl = $slstetyidxvl
-                if("$slstchkvl" eq $hshidxcnf->{"checkvalue"} . ""
-                  && defined $slstetyidxvl);
-
+                $iupdidxcnf = 1;
             }
-            else  #Its not a by Value Index
+
+            $iidxcnt = $hshidxcnf->{"count"}
+              if ( defined $hshidxcnf->{"count"} );
+
+        }    #if(defined $hshidxcnf && defined $hshidxcnf->{"checkfield"})
+
+        #print "idx fld: '$sidxfld'; chk fld: '$schkfld'; chk vl: '$schkvl'"
+        #  . "; mta: '$imta'; set: '$isbset'\n";
+
+        if (   defined $hshidxcnf
+            && defined $hshidxcnf->{"checkfield"}
+            && $hshidxcnf->{"checkfield"} ne "" )
+        {
+            my $ietycnt = $self->getMetaEntryCount;
+
+        #Check the Index when the List was updated or when the Index was changed
+            my $ibld = $iupdidxcnf;
+
+            if ($irebuild) {
+                if ( defined $self->[LIST_ENTRIES_INDEXED]{$sindexname} ) {
+                    $self->[LIST_ENTRIES_INDEXED]{$sindexname} = ();
+                }    #if(defined $self->{"_list_entries_indexed"}{$sindexname})
+
+                $iidxcnt    = 0;
+                $iupdidxcnf = 1;
+
+                #Check the Index
+                $ibld = 1;
+            }    #if($irebuild)
+
+            if ( defined $self->[LIST_ENTRIES_INDEXED]{$sindexname} ) {
+
+                #Check the Index
+                $ibld = 1 if ( $iidxcnt < 0 );
+            }
+            else    #The Index still doesn't exist
             {
-              $sidxvl = $slstetyidxvl;
-            }  #if($sfldvl ne "")
-          } #if(defined $slstchkvl && $slstchkvl ne "")
+                $self->[LIST_ENTRIES_INDEXED]{$sindexname} = ();
 
-          #print "idx nm: '$sindexname'; chk fld: '$schkfld'; fld vl: '$slstchkvl'; idx vl: '$sidxvl'\n";
+                #Check the Index
+                $ibld = 1;
+            }       #if(defined $self->{"_list_entries_indexed"}{$sindexname})
 
-          if($sidxvl ne "")
-          {
-            unless(defined $self->[LIST_ENTRIES_INDEXED]{$sidxnm}{$sidxvl})
+            if ( $ietycnt > 0 ) {
+                unless ( $hshidxcnf->{"subset"} ) {
+                    $ibld = 1 if ( $ibld || $ietycnt != $iidxcnt );
+                }    #unless($hshidxcnf->{"subset"})
+            }
+            else     #There aren't any MetaEntries in the List
             {
-              $self->[LIST_ENTRIES_INDEXED]{$sidxnm}{$sidxvl} = $ety;
+                $ibld = 0;
+            }        #if($ietycnt > 0)
 
-              #Count the Entries
-              $hshidxcnf->{"count"}++;
+          #print "ety cnt: '$ietycnt'; idx ety cnt: '$iidxcnt'; bld: '$ibld'\n";
 
-              $iupdidxcnf = 1 unless($iupdidxcnf);
+            if ($ibld) {
+                my $ety          = undef;
+                my $sidxvl       = "";
+                my $slstetyidxvl = "";
+                my $slstchkvl    = undef;
+                my $iety         = -1;
 
-            }  #unless(defined $self->[LIST_ENTRIES_INDEXED]{$sindexname}{$sidxvl})
-          } #if($sidxvl ne "")
-        } #foreach $sidxnm (keys %{$hshidxcnfs})
-      } #if(defined $ety)
-    } #for($iety = 0; $iety < $ietycnt; $iety++)
-  } #if($ibld)
+                $iidxcnt = 0;
 
-  if($iupdidxcnf)
-  {
-    $self->setMeta("indexconfiguration", $hshidxcnfs)
-  } #if($iupdidxcnf)
+                for ( $iety = 0 ; $iety < $ietycnt ; $iety++ ) {
+                    $ety    = $self->[LIST_ENTRIES][$iety];
+                    $sidxvl = "";
+
+                    if ( defined $ety ) {
+                        $slstetyidxvl =
+                          $ety->get( $hshidxcnf->{"indexfield"}, undef );
+                        $slstchkvl = $ety->get( $hshidxcnf->{"checkfield"},
+                            undef, $hshidxcnf->{"meta"} );
+
+                        if ( defined $slstchkvl
+                            && $slstchkvl ne "" )
+                        {
+                            if ( $hshidxcnf->{"checkvalue"} ne "" ) {
+                                $sidxvl = $slstetyidxvl
+                                  if (
+                                      "$slstchkvl" eq $hshidxcnf->{"checkvalue"}
+                                    . ""
+                                    && defined $slstetyidxvl );
+
+                            }
+                            else    #Its not a by Value Index
+                            {
+                                $sidxvl = $slstetyidxvl;
+                            }       #if($sfldvl ne "")
+                        }    #if(defined $slstchkvl && $slstchkvl ne "")
+
+#print "idx nm: '$sindexname'; chk fld: '$schkfld'; fld vl: '$slstchkvl'; idx vl: '$sidxvl'\n";
+
+                        if ( $sidxvl ne "" ) {
+                            unless (
+                                defined $self->[LIST_ENTRIES_INDEXED]
+                                {$sindexname}{$sidxvl} )
+                            {
+                                $self->[LIST_ENTRIES_INDEXED]{$sindexname}
+                                  {$sidxvl} = $ety;
+
+                                #Count the Entries
+                                $iidxcnt++;
+
+                                $iupdidxcnf = 1 unless ($iupdidxcnf);
+
+                            } #unless(defined $self->[LIST_ENTRIES_INDEXED]{$sindexname}{$sidxvl})
+                        }    #if($sidxvl ne "")
+                    }    #if(defined $ety)
+                }    #for($iety = 0; $iety < $ietycnt; $iety++)
+            }    #if($ibld)
+        }    #if(defined $hshidxcnf && defined $hshidxcnf->{"checkfield"}
+             # && $hshidxcnf->{"checkfield"} ne "")
+
+        if ($iupdidxcnf) {
+            $hshidxcnfs->{$sindexname}{"count"} = $iidxcnt;
+
+            $self->setMeta( "indexconfiguration", $hshidxcnfs );
+        }    #if($iupdidxcnf)
+    }    #if(defined $sindexname && $sindexname ne "")
+
 }
 
-sub Clear
-{
-  my $self = $_[0];
-  my $hshidxcnfs = $self->getMeta("indexconfiguration", {});
+sub buildIndexAll {
+    my $self     = shift;
+    my $irebuild = shift || 0;
 
+    my $ietycnt = $self->getMetaEntryCount;
 
-  #Execute the Base Class Logic
-  $self->SUPER::Clear;
+    my $hshidxcnfs = $self->getMeta( "indexconfiguration", {} );
+    my $hshidxcnf  = undef;
+    my $sidxnm     = "";
+    my $iidxcnt    = -1;
 
-  #Save the Index Configuration
-  $self->setMeta("indexconfiguration", $hshidxcnfs);
+    my $ibld = 0;
 
-  #Clear the Object List too
-  $self->clearList;
+    if ( scalar( keys %$hshidxcnfs ) > 0 ) {
+        foreach $sidxnm ( keys %{$hshidxcnfs} ) {
+            $hshidxcnf = $hshidxcnfs->{$sidxnm};
+
+            if ( defined $hshidxcnf ) {
+                unless ( defined $hshidxcnf->{"indexfield"}
+                    && $hshidxcnf->{"indexfield"} ne "" )
+                {
+                    $hshidxcnf->{"indexfield"} = $hshidxcnf->{"checkfield"};
+
+                    $ibld = 1;
+                } #unless(defined $hshidxcnf->{"indexfield"} && $hshidxcnf->{"indexfield"} ne "")
+
+                $iidxcnt = $hshidxcnf->{"count"}
+                  if ( defined $hshidxcnf->{"count"} );
+
+            }    #if(defined $hshidxcnf)
+
+            if ($irebuild) {
+                if ( defined $self->[LIST_ENTRIES_INDEXED]{$sidxnm} ) {
+                    $self->[LIST_ENTRIES_INDEXED]{$sidxnm} = ();
+                }    #if(defined $self->[LIST_ENTRIES_INDEXED]{$sidxnm})
+
+                $hshidxcnf->{"count"} = 0;
+
+                #Check the Index
+                $ibld = 1;
+            }    #if($irebuild)
+
+            if ( defined $self->[LIST_ENTRIES_INDEXED]{$sidxnm} ) {
+
+                #Check the Index
+                $ibld = 1 if ( $iidxcnt < 0 );
+            }
+            else    #The Index still doesn't exist
+            {
+                $self->[LIST_ENTRIES_INDEXED]{$sidxnm} = ();
+
+                #Check the Index
+                $ibld = 1;
+            }       #if(defined $self->{"_list_entries_indexed"}{$sidxnm})
+
+            if ( $ietycnt > 0 ) {
+                unless ( $hshidxcnf->{"subset"} ) {
+                    $ibld = 1 if ( $ibld || $ietycnt != $iidxcnt );
+                }    #unless($hshidxcnf->{"subset"})
+            }    #if($ietycnt > 0)
+
+            #print "idx nm: '$sidxnm'; idx ety cnt: '$iidxcnt'; bld: '$ibld'\n";
+
+        }    #foreach $sidxnm (keys %{$hshidxcnfs})
+
+    }    #if(scalar(keys %$hshidxcnfs) > 0)
+
+    #print "ety cnt: '$ietycnt'; bld: '$ibld'\n";
+
+    if ($ibld) {
+        my $ety          = undef;
+        my $sidxvl       = "";
+        my $slstetyidxvl = "";
+        my $slstchkvl    = undef;
+        my $iety         = -1;
+
+        foreach $sidxnm ( keys %{$hshidxcnfs} ) {
+            $hshidxcnfs->{$sidxnm}{"count"} = 0;
+        }
+
+        for ( $iety = 0 ; $iety < $ietycnt ; $iety++ ) {
+            $ety    = $self->[LIST_ENTRIES][$iety];
+            $sidxvl = "";
+
+            if ( defined $ety ) {
+                foreach $sidxnm ( keys %{$hshidxcnfs} ) {
+                    $hshidxcnf = $hshidxcnfs->{$sidxnm};
+
+                    $slstetyidxvl =
+                      $ety->get( $hshidxcnf->{"indexfield"}, undef );
+                    $slstchkvl = $ety->get( $hshidxcnf->{"checkfield"},
+                        undef, $hshidxcnf->{"meta"} );
+                    $sidxvl = '';
+
+                    if ( defined $slstchkvl
+                        && $slstchkvl ne "" )
+                    {
+                        if ( $hshidxcnf->{"checkvalue"} ne "" ) {
+                            $sidxvl = $slstetyidxvl
+                              if (
+                                "$slstchkvl" eq $hshidxcnf->{"checkvalue"} . ""
+                                && defined $slstetyidxvl );
+
+                        }
+                        else    #Its not a by Value Index
+                        {
+                            $sidxvl = $slstetyidxvl;
+                        }       #if($sfldvl ne "")
+                    }    #if(defined $slstchkvl && $slstchkvl ne "")
+
+#print "idx nm: '$sindexname'; chk fld: '$schkfld'; fld vl: '$slstchkvl'; idx vl: '$sidxvl'\n";
+
+                    if ( $sidxvl ne "" ) {
+                        unless (
+                            defined $self->[LIST_ENTRIES_INDEXED]{$sidxnm}
+                            {$sidxvl} )
+                        {
+                            $self->[LIST_ENTRIES_INDEXED]{$sidxnm}{$sidxvl} =
+                              $ety;
+
+                            #Count the Entries
+                            $hshidxcnf->{"count"}++;
+
+                            $iupdidxcnf = 1 unless ($iupdidxcnf);
+
+                        } #unless(defined $self->[LIST_ENTRIES_INDEXED]{$sindexname}{$sidxvl})
+                    }    #if($sidxvl ne "")
+                }    #foreach $sidxnm (keys %{$hshidxcnfs})
+            }    #if(defined $ety)
+        }    #for($iety = 0; $iety < $ietycnt; $iety++)
+    }    #if($ibld)
+
+    if ($iupdidxcnf) {
+        $self->setMeta( "indexconfiguration", $hshidxcnfs );
+    }    #if($iupdidxcnf)
 }
 
-sub clearList
-{
-  my $self = $_[0];
-  my $hshidxcnfs = $self->getMeta('indexconfiguration', {});
+sub Clear {
+    my $self       = $_[0];
+    my $hshidxcnfs = $self->getMeta( "indexconfiguration", {} );
 
+    #Execute the Base Class Logic
+    $self->SUPER::Clear;
 
-  #Clear the Entry Lists
-  $self->[LIST_ENTRIES] = ();
-  $self->[LIST_ENTRIES_INDEXED] = ();
+    #Save the Index Configuration
+    $self->setMeta( "indexconfiguration", $hshidxcnfs );
 
-
-  foreach (keys %{$hshidxcnfs})
-  {
-    $hshidxcnfs->{$_}{"count"} = 0;
-  }
+    #Clear the Object List too
+    $self->clearList;
 }
 
-sub clearLists
-{
-  goto &clearList;
+sub clearList {
+    my $self       = $_[0];
+    my $hshidxcnfs = $self->getMeta( 'indexconfiguration', {} );
+
+    #Clear the Entry Lists
+    $self->[LIST_ENTRIES]         = ();
+    $self->[LIST_ENTRIES_INDEXED] = ();
+
+    foreach ( keys %{$hshidxcnfs} ) {
+        $hshidxcnfs->{$_}{"count"} = 0;
+    }
 }
 
-
+sub clearLists {
+    goto &clearList;
+}
 
 #----------------------------------------------------------------------------
 #Consultation Methods
 
+sub getIndexField {
+    my ( $self, $sindexname ) = @_;
+    my $sindexfield = "";
+    my $hshidxcnfs  = $self->getMeta( "indexconfiguration", {} );
 
-sub getIndexField
-{
-  my ($self, $sindexname) = @_;
-  my $sindexfield = "";
-  my $hshidxcnfs = $self->getMeta("indexconfiguration", {});
+    $sindexname = PRIMARY_INDEXNAME unless ( defined $sindexname );
 
+    if ( defined $hshidxcnfs->{$sindexname} ) {
+        $sindexfield = $hshidxcnfs->{$sindexname}{"indexfield"}
+          if ( defined $hshidxcnfs->{$sindexname}{"indexfield"} );
 
-
-  $sindexname = PRIMARY_INDEXNAME unless(defined $sindexname);
-
-  if(defined $hshidxcnfs->{$sindexname})
-  {
-    $sindexfield = $hshidxcnfs->{$sindexname}{"indexfield"}
-      if(defined $hshidxcnfs->{$sindexname}{"indexfield"});
-
-  }
-
-
-  return $sindexfield;
-}
-
-sub getMetaObject
-{
-  my ($self, $iindex) = @_[0..1];
-  my $rsety = undef;
-
-
-  if(defined $iindex)
-  {
-    if($iindex =~ /^\-?\d+$/)
-    {
-      if($iindex > -1
-        && $iindex < scalar(@{$self->[LIST_ENTRIES]}))
-      {
-        $rsety = $self->[LIST_ENTRIES][$iindex];
-      }
     }
-    else  #The Index Value is a Text
+
+    return $sindexfield;
+}
+
+sub getMetaObject {
+    my ( $self, $iindex ) = @_[ 0 .. 1 ];
+    my $rsety = undef;
+
+    if ( defined $iindex ) {
+        if ( $iindex =~ /^\-?\d+$/ ) {
+            if (   $iindex > -1
+                && $iindex < scalar( @{ $self->[LIST_ENTRIES] } ) )
+            {
+                $rsety = $self->[LIST_ENTRIES][$iindex];
+            }
+        }
+        else    #The Index Value is a Text
+        {
+            #For a Indexed MetaEntry Lookup there need to be more parameters
+            $rsety = $self->getIdxMetaEntry( $iindex, @_[ 2 .. $#_ ] );
+        }       #if($iindex =~ /^\-?\d+$/)
+    }    #if(defined $iindex)
+
+    return $rsety;
+}
+
+sub getIdxMetaObject {
+    my ( $self, $sindexname, $sindexvalue ) = @_;
+    my $rsety = undef;
+
+    unless ( defined $sindexvalue ) {
+        $sindexvalue = $sindexname;
+        $sindexname  = PRIMARY_INDEXNAME;
+    }
+
+    #print "idx nm: '$sindexname'; idx vl: '$sindexvalue'\n";
+
+    if ( $sindexname ne ""
+        && defined $self->[LIST_ENTRIES_INDEXED]{$sindexname} )
     {
-      #For a Indexed MetaEntry Lookup there need to be more parameters
-      $rsety = $self->getIdxMetaEntry($iindex, @_[2..$#_]);
-    } #if($iindex =~ /^\-?\d+$/)
-  } #if(defined $iindex)
+        $rsety = $self->[LIST_ENTRIES_INDEXED]{$sindexname}{$sindexvalue}
+          if (
+            defined $self->[LIST_ENTRIES_INDEXED]{$sindexname}{$sindexvalue} );
 
+    } #if($sindexname ne "" && defined $self->[LIST_ENTRIES_INDEXED]{$sindexname})
 
-  return $rsety;
+    return $rsety;
 }
-
-sub getIdxMetaObject
-{
-  my ($self, $sindexname, $sindexvalue) = @_;
-  my $rsety = undef;
-
-
-  unless(defined $sindexvalue)
-  {
-    $sindexvalue = $sindexname;
-    $sindexname = PRIMARY_INDEXNAME;
-  }
-
-  #print "idx nm: '$sindexname'; idx vl: '$sindexvalue'\n";
-
-  if($sindexname ne ""
-    && defined $self->[LIST_ENTRIES_INDEXED]{$sindexname})
-  {
-    $rsety = $self->[LIST_ENTRIES_INDEXED]{$sindexname}{$sindexvalue}
-      if(defined $self->[LIST_ENTRIES_INDEXED]{$sindexname}{$sindexvalue});
-
-  } #if($sindexname ne "" && defined $self->[LIST_ENTRIES_INDEXED]{$sindexname})
-
-
-  return $rsety;
-}
-
 
 =pod
 
@@ -1100,86 +1028,71 @@ B<Returns:> integer - The Count of C<Object::Meta> objects in the List
 
 =cut
 
-sub getMetaObjectCount
-{
-  my $self = $_[0];
-  my $irscnt = $self->getMeta('entrycount', -1);
+sub getMetaObjectCount {
+    my $self   = $_[0];
+    my $irscnt = $self->getMeta( 'entrycount', -1 );
 
+    if ( $irscnt < 0 ) {
+        if ( defined $self->[LIST_ENTRIES] ) {
+            $irscnt = scalar( @{ $self->[LIST_ENTRIES] } );
+        }
+        else {
+            $irscnt = 0;
+        }
 
-  if($irscnt < 0)
-  {
-    if(defined $self->[LIST_ENTRIES])
+        $self->setMeta( 'entrycount', $irscnt );
+    }    #if($irscnt < 0)
+
+    return $irscnt;
+}
+
+sub getIdxMetaObjectCount {
+    my ( $self, $sindexname ) = @_;
+    my $irscnt = -1;
+
+    my $hshidxcnfs = $self->getMeta( 'indexconfiguration', {} );
+
+    $sindexname = PRIMARY_INDEXNAME unless ( defined $sindexname );
+
+    if ( $sindexname ne ''
+        && defined $hshidxcnfs->{$sindexname} )
     {
-      $irscnt = scalar(@{$self->[LIST_ENTRIES]});
+        $irscnt = $hshidxcnfs->{$sindexname}{"count"};
     }
-    else
+
+    if ( $irscnt < 0
+        && defined $hshidxcnfs->{$sindexname} )
     {
-      $irscnt = 0;
+        $irscnt = scalar( keys %{ $self->[LIST_ENTRIES_INDEXED]{$sindexname} } )
+          if ( defined $self->[LIST_ENTRIES_INDEXED]{$sindexname} );
+
+        if ( $irscnt > 0 ) {
+            $hshidxcnfs->{$sindexname}{"count"} = $irscnt;
+
+            $self->setMeta( "indexconfiguration", $hshidxcnfs );
+        }    #if($irscnt > 0)
+    }    #if($irscnt < 0 && defined $hshidxcnfs->{$sindexname})
+
+    return $irscnt;
+}
+
+sub getIdxValueArray {
+    my $self       = shift;
+    my $sindexname = shift;
+    my @arrrs      = undef;
+
+    $sindexname = PRIMARY_INDEXNAME unless ( defined $sindexname );
+
+    if ( $sindexname ne ""
+        && defined $self->[LIST_ENTRIES_INDEXED]{$sindexname} )
+    {
+        @arrrs = keys %{ $self->[LIST_ENTRIES_INDEXED]{$sindexname} };
     }
+    else {
+        @arrrs = ();
+    } #if($sindexname ne "" && defined $self->[LIST_ENTRIES_INDEXED]{$sindexname})
 
-    $self->setMeta('entrycount', $irscnt);
-  } #if($irscnt < 0)
-
-
-  return $irscnt;
+    return (@arrrs);
 }
-
-sub getIdxMetaObjectCount
-{
-  my ($self, $sindexname) = @_;
-  my $irscnt = -1;
-
-  my $hshidxcnfs = $self->getMeta('indexconfiguration', {});
-
-
-  $sindexname = PRIMARY_INDEXNAME unless(defined $sindexname);
-
-  if($sindexname ne ''
-    && defined $hshidxcnfs->{$sindexname})
-  {
-    $irscnt = $hshidxcnfs->{$sindexname}{"count"};
-  }
-
-  if($irscnt < 0
-    && defined $hshidxcnfs->{$sindexname})
-  {
-    $irscnt = scalar(keys %{$self->[LIST_ENTRIES_INDEXED]{$sindexname}})
-      if(defined $self->[LIST_ENTRIES_INDEXED]{$sindexname});
-
-    if($irscnt > 0)
-    {
-      $hshidxcnfs->{$sindexname}{"count"} = $irscnt;
-
-      $self->setMeta("indexconfiguration", $hshidxcnfs)
-    } #if($irscnt > 0)
-  } #if($irscnt < 0 && defined $hshidxcnfs->{$sindexname})
-
-
-  return $irscnt;
-}
-
-sub getIdxValueArray
-{
-  my $self = shift;
-  my $sindexname = shift;
-  my @arrrs = undef;
-
-
-  $sindexname = PRIMARY_INDEXNAME unless(defined $sindexname);
-
-  if($sindexname ne ""
-    && defined $self->[LIST_ENTRIES_INDEXED]{$sindexname})
-  {
-    @arrrs = keys %{$self->[LIST_ENTRIES_INDEXED]{$sindexname}};
-  }
-  else
-  {
-    @arrrs = ();
-  } #if($sindexname ne "" && defined $self->[LIST_ENTRIES_INDEXED]{$sindexname})
-
-
-  return (@arrrs);
-}
-
 
 return 1;
