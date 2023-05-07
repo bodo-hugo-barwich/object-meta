@@ -2,7 +2,7 @@
 # Object::Meta
 Object::Meta - Library to manage data and meta data as one object but keeping it separate
 
-Of special importance it the **Index Field** which is use to create an automatical index
+Of special importance is the **Index Field** which is use to create an automatical index
 in the `Object::Meta::List`.
 
 It does not require lengthly creation of definition modules.

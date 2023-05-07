@@ -1,6 +1,6 @@
 #
 # @author Bodo (Hugo) Barwich
-# @version 2023-04-08
+# @version 2023-05-07
 # @package Indexed List
 # @subpackage Object/Meta.pm
 
@@ -37,7 +37,7 @@ use constant LIST_META_DATA => 1;
 
 C<Object::Meta> implements a Class to manage a data and additional meta data as an object
 
-Of special importance it the B<Index Field> which is use to create an automatical index
+Of special importance is the B<Index Field> which is use to create an automatical index
 in the C<Object::Meta::List>.
 
 It does not require lengthly creation of definition modules.
@@ -47,7 +47,9 @@ It does not require lengthly creation of definition modules.
 #----------------------------------------------------------------------------
 #Constructors
 
-=head1 CONSTRUCTOR
+=head1 METHODS
+
+=head2 Constructor
 
 =over 4
 
@@ -93,13 +95,13 @@ sub DESTROY {
 #----------------------------------------------------------------------------
 #Administration Methods
 
-=head1 Administration Methods
+=head2 Administration Methods
 
 =over 4
 
 =item set ( DATA )
 
-This Method will asign Values to B<physically Data Fields>.
+This method will asign values to B<physically Data Fields>.
 
 C<DATA> is a list which is passed in a hash like fashion, using key and value pairs.
 
@@ -127,7 +129,7 @@ sub set {
 
 =item setMeta ( DATA )
 
-This Method will asign Values to B<Meta Data Fields>.
+This method will asign values to B<Meta Data Fields>.
 
 C<DATA> is a list which is passed in a hash like fashion, using key and value pairs.
 
@@ -155,7 +157,7 @@ sub setMeta {
 
 =item setIndexField ( INDEX_FIELD )
 
-This Method configure the B<Index Field> for this object.
+This method configure the B<Index Field> for this object.
 
 C<INDEX_FIELD> - is the name of the Field which contains the Value by which the object
 will be indexed.
@@ -187,7 +189,6 @@ C<INDEX_VALUE> - is the scalar value of the Field by which the object will be in
 
 =cut
 
-
 sub setIndexValue {
     my ( $self, $sindexvalue ) = @_;
     my $sindexfield = Object::Meta::getIndexField $self;
@@ -215,6 +216,28 @@ sub Clear {
 #----------------------------------------------------------------------------
 #Consultation Methods
 
+=pod
+
+=head2 Consultation Methods
+
+=over 4
+
+=item get ( FIELD_NAME [, DEFAULT_VALUE [. IS_META ] ] )
+
+This Method retrieves the value of the field with name C<FIELD_NAME> for this object.
+It can be a B<Physical Field> or a B<Meta Field>.
+
+C<FIELD_NAME> - is the name of the Field which value it must return.
+
+C<DEFAULT_VALUE> - is the default value to return if the Field does not exist.
+  (Otherwise it would return C<undef>)
+
+C<IS_META> - whether the C<FIELD_NAME> is a B<Meta Field>.
+
+=back
+
+=cut
+
 sub get {
     my ( $self, $sfieldname, $sdefault, $imta ) = @_;
     my $srs = $sdefault;
@@ -241,6 +264,23 @@ sub get {
     return $srs;
 }
 
+=pod
+
+=over 4
+
+=item getMeta ( FIELD_NAME [, DEFAULT_VALUE ] )
+
+This Method retrieves the value of the B<Meta Field> with name C<FIELD_NAME> for this object.
+
+C<FIELD_NAME> - is the name of the Field which value it must return.
+
+C<DEFAULT_VALUE> - is the default value to return if the Field does not exist.
+  (Otherwise it would return C<undef>)
+
+=back
+
+=cut
+
 sub getMeta {
     my ( $self, $sfieldname, $sdefault ) = @_;
     my $srs = $sdefault;
@@ -256,9 +296,37 @@ sub getMeta {
     return $srs;
 }
 
+=pod
+
+=over 4
+
+=item getIndexField ()
+
+This method retrieves the Name of the B<Index Field> with the object will be indexed.
+
+The name of the B<Index Field> is a B<Meta Field> which is stored separately.
+
+B<Returns:> The Name of the B<Index Field> or an empty String if the Field is not set.
+
+=back
+
+=cut
+
 sub getIndexField {
     return Object::Meta::getMeta( $_[0], 'indexfield', '' );
 }
+
+=pod
+
+=over 4
+
+=item getIndexValue ()
+
+This method retrieves the Value of the B<Index Field> by which the object will be indexed.
+
+=back
+
+=cut
 
 sub getIndexValue {
     my $sindexfield = Object::Meta::getIndexField $_[0];
