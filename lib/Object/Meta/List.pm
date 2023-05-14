@@ -43,8 +43,6 @@ use constant LIST_ENTRIES_INDEXED => 3;
 
 use constant PRIMARY_INDEXNAME => 'primary';
 
-use Data::Dump qw(dump);
-
 #----------------------------------------------------------------------------
 #Constructors
 
@@ -277,8 +275,6 @@ sub createIndex {
         $hshprms{"subset"} = 1
           if ( defined $hshprms{"checkvalue"}
             && $hshprms{"checkvalue"} ne "" );
-
-        print "'" . (caller(0))[3] . "' - idx '$sidxnm' prms dmp:\n'" . dump(\%hshprms) . "'\n";
 
         %{$hshidxcnfs} = () unless ( defined $hshidxcnfs );
 

@@ -1,15 +1,15 @@
 #!/usr/bin/perl
 
 # @author Bodo (Hugo) Barwich
-# @version 2023-05-07
+# @version 2023-05-14
 # @package Test for the Object::Meta Module
 # @subpackage test_object.t
 
-# This Module runs tests on the Object::Meta Module
+# This Module runs tests on the Object::Meta::List Module
 #
 #---------------------------------
 # Requirements:
-# - The Perl Module "Object::Meta" must be installed
+# - The Perl Module "Object::Meta::Liist" must be installed
 #
 
 
