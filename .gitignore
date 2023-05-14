@@ -2,6 +2,7 @@
 .project
 .includepath
 .settings
+.vscode
 *.tdy
 *.save
 

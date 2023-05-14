@@ -66,6 +66,13 @@ subtest 'Constructors' => sub {
 	    is( $obj->get($_, ''), $objdata{$_}, "Field '$_': added correctly" );
 	  }
   };
+};
+
+subtest 'Set Data' => sub {
+
+  #------------------------
+  #Test: 'Set Data'
+
   subtest 'object set data' => sub {
     $obj = Object::Meta->new();
 
@@ -77,6 +84,13 @@ subtest 'Constructors' => sub {
       is( $obj->get($_, ''), $objdata{$_}, "Field '$_': added correctly" );
     }
   };
+};
+
+subtest 'Set Meta Data' => sub {
+
+  #------------------------
+  #Test: 'Set Meta Data'
+
   subtest 'object set meta data' => sub {
     $obj = Object::Meta->new();
 
