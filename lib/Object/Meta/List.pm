@@ -109,7 +109,7 @@ sub Add {
             }
             else    #A Single Scalar Parameter
             {
-                #Create the new MetaEntry Object with the Index Value
+                #Create the new Object::Meta with the Index Value
                 $mtaety = Object::Meta::->new( $self->getIndexField, $_[1] );
             }
         }    #if(defined blessed $_[1])

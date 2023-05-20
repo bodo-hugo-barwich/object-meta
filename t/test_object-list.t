@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # @author Bodo (Hugo) Barwich
-# @version 2023-05-14
+# @version 2023-05-20
 # @package Test for the Object::Meta Module
 # @subpackage test_object.t
 
@@ -116,6 +116,31 @@ subtest 'Add Objects' => sub {
     $list->Add($obj);
 
     is( $list->getMetaObjectCount(), 3, "List has 3 Objects" );
+
+    $obj = $list->getMetaObject(0);
+
+    isnt( $obj, undef, "Object with Index '0': is set" );
+    is( ref $obj, 'Object::Meta', "Object with Index '0': is an 'Object::Meta'" );
+  };
+  subtest 'Add Objects by the ID Value' => sub {
+    $list = Object::Meta::List->new();
+
+    is(ref $list, 'Object::Meta::List', "List 'Object::Meta::List': created correctly");
+
+    is( $list->getMetaObjectCount(), 0, "List is empty as expected" );
+    is( $list->getMetaObject(0), undef, "Object with Index '0': does not exist as expected" );
+
+    # Create an Index with the setIndexField() method
+    $list->setIndexField('field1');
+
+    is( $list->getIndexField(), 'field1', "Index Field 'field1' as expected" );
+
+    $list->Add('value1');
+    $list->Add('value4');
+    $list->Add('value7');
+
+    is( $list->getMetaObjectCount(), 3, "List has 3 Objects" );
+    is( $list->getIdxMetaObjectCount(), 3, "Indexed Objects: Count '3'" );
 
     $obj = $list->getMetaObject(0);
 
