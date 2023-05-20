@@ -146,6 +146,8 @@ subtest 'Add Objects' => sub {
 
     isnt( $obj, undef, "Object with Index '0': is set" );
     is( ref $obj, 'Object::Meta', "Object with Index '0': is an 'Object::Meta'" );
+    is( $obj->get('field1', ''), 'value1', "Object Field 'field1' is created with Value 'value1'" );
+    is( $obj->getIndexValue(), 'value1', "Object Index Value: is 'value1'" );
   };
 };
 
