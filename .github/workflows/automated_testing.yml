@@ -39,13 +39,16 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Starting Test Sequences
+      - name: Test Sequences
         run: |
-          echo "Starting Test Sequences"
+          
           echo "Listing Directory Contents"
           pwd && ls -lah
           perl Makefile.PL
           make manifest
+          echo "'MANIFEST' content:"
+          cat MANIFEST
+          echo "Starting Test Sequences"
           make test
 
       # Runs a set of commands using the runners shell
