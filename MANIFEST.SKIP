@@ -2,6 +2,7 @@
 .github
 .includepath
 .project
+.settings
 .travis.yml
 \.tdy$
 \.save$

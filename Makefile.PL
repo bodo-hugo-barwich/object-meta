@@ -6,7 +6,7 @@ WriteMakefile(
     LICENSE          => 'perl',
     AUTHOR           => 'Bodo (Hugo) Barwich <b.barwich@hotmail.com>',
     VERSION_FROM     => 'lib/Object/Meta.pm',
-    MIN_PERL_VERSION => '5.10',
+    MIN_PERL_VERSION => '5.010',
     test             => {TESTS => 't/*.t'},
     BUILD_REQUIRES   => {
         'ExtUtils::MakeMaker' => '6.46',
