@@ -69,6 +69,7 @@ jobs:
         run: |
           echo "git - tag: '${{ steps.git_tag.outputs.tag }}'; exists: '${{ steps.git_tag.outputs.exists }}'"
           echo "git - commit: '${{ steps.package_version.outputs.version_commit }}'"
+          git checkout master
           find_commit_res=`scripts/find_version_commit.pl "${{ steps.package_version.outputs.version_commit }}"` || true
           echo -e "$find_commit_res"
           find_commit_res=`echo "$find_commit_res" | grep -i " by "`
