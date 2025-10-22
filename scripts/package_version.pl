@@ -144,12 +144,12 @@ unless ( defined $version{version} ) {
             my $filecontent = $versionfile->slurp;
 
             if ( $filecontent =~
-                qr/^\s*(our\s+\$version\s*=\s+['"]([^'"]*)['"])/mi )
+                qr/^\s*(our.+version\s*=\s+['"]([^'"]*)['"])/mi )
             {
                 $version{version}        = $2;
                 $version{version_search} = $1;
 
-                $version{version_search} =~ s#\$#\[\$\]#;
+                $version{version_search} =~ s#\$#.#;
             }
             else {
                 print "version miss\n" if ($debug);
