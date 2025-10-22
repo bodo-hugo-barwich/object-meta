@@ -47,7 +47,7 @@ sub git_blame_version_file {
       if ( $debug > 0 && $quiet < 1 );
 
     foreach (@blame_lines) {
-        if ( $_ =~ m#^(([^\(]+) (\([^\)]+\))\s+$version->{version_search})# ) {
+        if ( $_ =~ m#^(([^\(]+) (\(.*\))\s+$version->{version_search})# ) {
             $version->{version_commit_raw} = [ $2, $3, $1 ];
         }
     }
