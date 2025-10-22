@@ -31,7 +31,7 @@ jobs:
         run: | 
           perl --version
           sudo apt-get update 
-          sudo apt-get -y install git cpanminus libextutils-makemaker-cpanfile-perl
+          sudo apt-get -y install git cpanminus yq libextutils-makemaker-cpanfile-perl
           sudo apt-get -y install libgetopt-long-descriptive-perl libcpan-uploader-perl libpath-tiny-perl
           sudo apt-get -y install libcpanel-json-xs-perl libjson-xs-perl libjson-perl libdata-dump-perl
 
@@ -47,7 +47,9 @@ jobs:
       - name: Package Version
         id: package_version
         run: |
-          package_version_res=`scripts/package_version.pl -d`
+          package_version_yaml=`run_subprocess.pl -n 'Package Version' -c 'scripts/package_version.pl' -f yaml`
+          echo -e "$package_version_yaml"
+          package_version_res=`echo "$package_version_yaml" | yq '.stdout'`
           echo -e "$package_version_res"
           if [ -z "$package_version_res" ]; then echo "could not find PACKAGE VERSION"; exit 1; fi;
           package_name=`echo "$package_version_res" | cut -d"=" -f1 | cut -d"@" -f1`
