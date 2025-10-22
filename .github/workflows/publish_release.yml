@@ -47,6 +47,7 @@ jobs:
       - name: Package Version
         id: package_version
         run: |
+          eval $(perl -Mlocal::lib -I ~/perl5/lib/perl5/)
           package_version_yaml=`run_subprocess.pl -n 'Package Version' -c 'scripts/package_version.pl' -f yaml`
           echo -e "$package_version_yaml"
           package_version_res=`echo "$package_version_yaml" | yq '.stdout'`
