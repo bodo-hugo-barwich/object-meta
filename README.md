@@ -1,3 +1,5 @@
+[![Automated Tests](https://github.com/bodo-hugo-barwich/object-meta/actions/workflows/automated_testing.yml/badge.svg)](https://github.com/bodo-hugo-barwich/object-meta/actions/workflows/automated_testing.yml)
+
 # Object::Meta
 
 Object::Meta - Library to manage data and meta data as one object but keeping it separate
