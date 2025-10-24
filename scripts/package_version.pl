@@ -108,14 +108,14 @@ if ( $maindir->child('Makefile.PL')->exists ) {
         print "file 'Makefile.PL': settings:\n'$packagesettings'\n";
     }
 
-    if ( $packagesettings =~ qr/^\s*name\s*=>\s*['"]([^'"]*)['"]/mi ) {
+    if ( $packagesettings =~ qr/^\s*['"]*name['"]*\s*=>\s*['"]([^'"]+)['"]/mi ) {
         $version{name} = $1;
     }
     else {
         print "name miss\n" if ($debug);
     }
 
-    if ( $packagesettings =~ qr/^\s*(version\s*=>\s+['"]([^'"]*)['"])/mi ) {
+    if ( $packagesettings =~ qr/^\s*(version\s*=>\s+['"]([^'"]+)['"])/mi ) {
         $version{version}        = $2;
         $version{version_search} = $1;
         $version{version_file}   = 'Makefile.PL';

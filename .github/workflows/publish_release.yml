@@ -59,9 +59,9 @@ jobs:
           version_commit=`echo "$package_version_res" | cut -d"=" -f2 | cut -d"@" -f2`
           version_tag="v$package_version"
           echo "* Package Version:"
-          echo "Name: " $package_name     
-          echo "Version: " $version_tag     
-          echo "Commit: " $version_commit     
+          echo "Name: '$package_name'" $package_name     
+          echo "Version: '$version_tag'"      
+          echo "Commit: '$version_commit'"      
           echo "package=$package_name" >> $GITHUB_OUTPUT
           echo "version=$version_tag" >> $GITHUB_OUTPUT
           echo "version_commit=$version_commit" >> $GITHUB_OUTPUT
