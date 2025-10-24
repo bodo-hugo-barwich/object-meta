@@ -36,7 +36,7 @@ package Object::Meta::List;
 
 use parent 'Object::Meta';
 
-use Scalar::Util 'blessed';
+use Scalar::Util qw(blessed);
 
 use constant LIST_ENTRIES         => 2;
 use constant LIST_ENTRIES_INDEXED => 3;
