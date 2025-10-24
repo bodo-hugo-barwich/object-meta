@@ -42,7 +42,9 @@ jobs:
           which run_subprocess.pl || true
                 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PROJECT_RELEASE_TOKEN }}
           
       - name: Package Version
         id: package_version
@@ -61,7 +63,7 @@ jobs:
           version_commit=`echo "$package_version_res" | cut -d"=" -f2 | cut -d"@" -f2`
           version_tag="v$package_version"
           echo "* Package Version:"
-          echo "Name: '$package_name'" $package_name     
+          echo "Name: '$package_name'"     
           echo "Version: '$version_tag'"      
           echo "Commit: '$version_commit'"      
           echo "package=$package_name" >> $GITHUB_OUTPUT
