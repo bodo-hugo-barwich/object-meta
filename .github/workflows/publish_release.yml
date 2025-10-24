@@ -57,7 +57,11 @@ jobs:
           package_name=`echo "$package_version_res" | cut -d"=" -f1 | cut -d"@" -f1`
           package_version=`echo "$package_version_res" | cut -d"=" -f2 | cut -d"@" -f1`
           version_commit=`echo "$package_version_res" | cut -d"=" -f2 | cut -d"@" -f2`
-          version_tag="v$package_version"          
+          version_tag="v$package_version"
+          echo "* Package Version:"
+          echo "Name: " $package_name     
+          echo "Version: " $version_tag     
+          echo "Commit: " $version_commit     
           echo "package=$package_name" >> $GITHUB_OUTPUT
           echo "version=$version_tag" >> $GITHUB_OUTPUT
           echo "version_commit=$version_commit" >> $GITHUB_OUTPUT
@@ -78,6 +82,7 @@ jobs:
         run: |
           echo "git - tag: '${{ steps.git_tag.outputs.tag }}'; exists: '${{ steps.git_tag.outputs.exists }}'"
           echo "git - commit: '${{ steps.package_version.outputs.version_commit }}'"
+          eval $(perl -Mlocal::lib -I ~/perl5/lib/perl5/)
           find_commit_res=`scripts/find_version_commit.pl "${{ steps.package_version.outputs.version_commit }}"` || true
           echo -e "$find_commit_res"
           find_commit_res=`echo "$find_commit_res" | grep -i " by "`
