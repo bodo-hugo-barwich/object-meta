@@ -19,7 +19,7 @@
 
 =head1 NAME
 
-Object::Meta - Library to manage data and meta data as one object but keeping it separate
+Object::Meta - Library to manage raw data and meta data as one object but keeping it separate
 
 =cut
 
@@ -35,7 +35,7 @@ use constant LIST_META_DATA => 1;
 
 =head1 DESCRIPTION
 
-C<Object::Meta> implements a Class to manage a data and additional meta data as an object
+C<Object::Meta> implements a class to manage raw data and additional meta data as an object
 
 Of special importance is the B<Index Field> which is use to create an automatical index
 in the C<Object::Meta::List>.
@@ -51,13 +51,17 @@ It does not require lengthly creation of definition modules.
 
 =head2 Constructor
 
-=over 4
-
-=item new ( [ DATA ] )
+=head3 new ( [ DATA ] )
 
 This is the constructor for a new C<Object::Meta> object.
 
-C<DATA> - is B<physical data> which is passed in a hash like fashion,
+B<Parameters:>
+
+=over 4
+
+=item C<DATA>
+
+The B<raw data> which is passed in a hash like fashion,
 using key and value pairs.
 
 =back
@@ -97,13 +101,17 @@ sub DESTROY {
 
 =head2 Administration Methods
 
-=over 4
-
-=item set ( DATA )
+=head3 set ( DATA )
 
 This method will asign values to B<physically Data Fields>.
 
-C<DATA> is a list which is passed in a hash like fashion, using key and value pairs.
+B<Parameters:>
+
+=over 4
+
+=item C<DATA>
+
+A list which is passed in a hash like fashion, using key and value pairs.
 
 =back
 
