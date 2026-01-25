@@ -71,12 +71,11 @@ If a C<name> field is present it will be used to index the entry.
 
 sub new {
     my $class = ref( $_[0] ) || $_[0];
-    my $self  = undef;
 
     #Take the Method Parameters
     my %hshprms = @_[ 1 .. $#_ ];
 
-    $self = $class->SUPER::new(%hshprms);
+    my $self = $class->SUPER::new(%hshprms);
 
     #Set the Primary Index Field
     Object::Meta::setIndexField( $self, 'hash' );
@@ -95,6 +94,24 @@ sub new {
 #----------------------------------------------------------------------------
 #Administration Methods
 
+=head3 set ( DATA )
+
+This overrides the base method C<Object::Meta::set()> to recognize the C<name> field.
+
+See L<Method C<Object::Meta::set()>|Object::Meta/"set ( DATA )">
+
+=cut
+
+sub set {
+    my ( $self, %hshprms ) = @_;
+
+    if ( defined $hshprms{'name'} ) {
+        Object::Meta::Named::setName( $self, delete $hshprms{'name'} );
+    }
+
+    Object::Meta::set( $self, %hshprms );
+}
+
 =head3 setName ( [ NAME ] )
 
 This will create a C<name> field in the raw data and index the object by the hash of it.
@@ -107,7 +124,7 @@ B<Parameters:>
 
 The string value for the name of the object.
 
-If a C<NAME> is empty is undefined it will empty the C<name> field and
+If a C<NAME> is empty or is undefined it will empty the C<name> field and
 the C<hash> meta data field.
 
 =back
@@ -125,8 +142,7 @@ sub setName {
     }
 
     if ( $self->[Object::Meta::LIST_DATA]{'name'} ne '' ) {
-        Object::Meta::set( $self, 'hash',
-            md5_hex( $self->[Object::Meta::LIST_DATA]{'name'} ) );
+        Object::Meta::set( $self, 'hash', md5_hex( $self->[Object::Meta::LIST_DATA]{'name'} ) );
     }
     else {
         Object::Meta::set( $self, 'hash', '' );

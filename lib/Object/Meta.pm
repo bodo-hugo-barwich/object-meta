@@ -103,7 +103,7 @@ sub DESTROY {
 
 =head3 set ( DATA )
 
-This method will asign values to B<physically Data Fields>.
+This method will populate the B<raw Data Fields> with values.
 
 B<Parameters:>
 
@@ -125,8 +125,8 @@ sub set {
         #The Field Name must not be empty
         if ( $_ ne '' ) {
             $self->[LIST_DATA]{$_} = $hshprms{$_};
-        }    #if($_ ne "")
-    }    #foreach (keys %hshprms)
+        }
+    }
 }
 
 =pod
@@ -149,10 +149,10 @@ sub setMeta {
     foreach ( keys %hshprms ) {
 
         #The Field Name must not be empty
-        if ( $_ ne "" ) {
+        if ( $_ ne '' ) {
             $self->[LIST_META_DATA]{$_} = $hshprms{$_};
-        }    #if($_ ne "")
-    }    #foreach (keys %hshprms)
+        }
+    }
 }
 
 =pod
@@ -175,7 +175,7 @@ sub setIndexField {
 
     if ( defined $sindexfield ) {
         Object::Meta::setMeta( $self, 'indexfield', $sindexfield );
-    }    #if(defined $sindexfield)
+    }
 
 }
 
@@ -201,7 +201,7 @@ sub setIndexValue {
         && $sindexfield ne '' )
     {
         Object::Meta::set( $self, $sindexfield, $sindexvalue );
-    }    #if(defined $sindexvalue && $sindexfield ne "")
+    }
 }
 
 sub Clear {
@@ -248,7 +248,7 @@ sub get {
 
     unless ($imta) {
         if ( defined $sfieldname
-            && $sfieldname ne "" )
+            && $sfieldname ne '' )
         {
             if ( exists $self->[LIST_DATA]{$sfieldname} ) {
                 $srs = $self->[LIST_DATA]{$sfieldname};
@@ -257,13 +257,13 @@ sub get {
                 #Check as Meta Field
                 $srs = Object::Meta::getMeta( $self, $sfieldname, $sdefault );
             }
-        }    #if(defined $sfieldname && $sfieldname ne "")
+        }
     }
     else     #A Meta Field is requested
     {
         #Check a Meta Field
         $srs = Object::Meta::getMeta( $self, $sfieldname, $sdefault );
-    }        #unless($imta)
+    }
 
     return $srs;
 }
@@ -290,12 +290,12 @@ sub getMeta {
     my $srs = $sdefault;
 
     if ( defined $sfieldname
-        && $sfieldname ne "" )
+        && $sfieldname ne '' )
     {
         $srs = $self->[LIST_META_DATA]{$sfieldname}
           if ( exists $self->[LIST_META_DATA]{$sfieldname} );
 
-    }    #if(defined $sfieldname && $sfieldname ne "")
+    }
 
     return $srs;
 }
