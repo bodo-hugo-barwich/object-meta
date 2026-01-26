@@ -84,7 +84,6 @@ sub new {
         Object::Meta::set( $self, @_[ 1 .. $#_ ] );
     }
 
-    #Give the Object back
     return $self;
 }
 

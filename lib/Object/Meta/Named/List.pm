@@ -32,6 +32,7 @@ package Object::Meta::Named::List;
 use parent 'Object::Meta::List';
 
 use Scalar::Util qw(blessed);
+use Digest::MD5 qw(md5_hex);
 
 =head1 DESCRIPTION
 
@@ -49,14 +50,12 @@ The C<hash> meta data field is used to lookup entries.
 
 sub new {
     my $class = ref( $_[0] ) || $_[0];
-    my $self  = undef;
 
-    $self = $class->SUPER::new( @_[ 1 .. $#_ ] );
+    my $self = $class->SUPER::new( @_[ 1 .. $#_ ] );
 
     #Index the Name Field
     Object::Meta::List::setIndexField( $self, 'hash' );
 
-    #Give the Object back
     return $self;
 }
 
@@ -75,38 +74,60 @@ sub Add {
         {
             #Create the new MetaNameEntry Object from the given Parameters
             $mtaety = Object::Meta::Named::->new( @_[ 1 .. $#_ ] );
-        }       #if(defined blessed $_[1])
-    }    #if(scalar(@_) > 1)
+        }
+    }
 
     if ( defined $mtaety ) {
         unless ( $mtaety->isa('Object::Meta::Named') ) {
             $mtaety = undef;
         }
-    }    #if(defined $mtaety)
+    }
 
     $mtaety = Object::Meta::Named::->new unless ( defined $mtaety );
 
     #Execute the Base Logic
     Object::Meta::List::Add( $self, $mtaety );
 
-    #Give the MetaNameEntry Object back
     return $mtaety;
 }
 
 #----------------------------------------------------------------------------
 #Consultation Methods
 
-sub getMetaEntrybyName {
+=head2 Consultation Methods
+
+=head3 getMetaObjectbyName ( NAME )
+
+This works like C<Object::Meta::List::getIdxMetaObject()> only that it uses
+the hash of the the C<name> field to find the object.
+
+B<Parameters:>
+
+=over 4
+
+=item C<NAME>
+
+The string value for the C<name> field of the object.
+
+=back
+
+B<Returns:> C<Object::Meta::Named> - The object with the C<name> field having the
+value I<NAME>.
+
+See L<Method C<Object::Meta::List::getIdxMetaObject()>|Object::Meta::List/"getIdxMetaObject ( INDEX, NAME )">
+
+=cut
+
+sub getMetaObjectbyName {
     my ( $self, $snm ) = @_;
     my $mtaety = undef;
 
     if ( defined $snm
         && $snm ne '' )
     {
-        $mtaety = Object::Meta::List::getIdxMetaEntry( $self, md5_hex($snm) );
-    }    #if(defined $snm && $snm ne '')
+        $mtaety = Object::Meta::List::getIdxMetaObject( $self, md5_hex($snm) );
+    }
 
-    #Give the MetaNameEntry Object back
     return $mtaety;
 }
 

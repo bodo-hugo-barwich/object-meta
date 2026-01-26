@@ -3,7 +3,7 @@
 # @author Bodo (Hugo) Barwich
 # @version 2026-01-25
 # @package Test for the Object::Meta::Named Module
-# @subpackage test_object.t
+# @subpackage t/test_object-named.t
 
 # This Module runs tests on the Object::Meta::Named Module
 #
@@ -37,7 +37,6 @@ $spath =~ s/^(.*\/)$smodule$/$1/;
 
 my $obj         = undef;
 my %objdata     = ( 'name'    => 'object1', 'field1' => 'value1', 'field2' => 'value2', 'field3' => 'value3' );
-my %objmetadata = ( 'updated' => 'new' );
 my $objhash     = md5_hex('object1');
 
 subtest 'Constructors' => sub {

@@ -1,5 +1,5 @@
 # @author Bodo (Hugo) Barwich
-# @version 2025-10-24
+# @version 2026-01-25
 # @package Indexed List by Name
 # @subpackage classes_metanames.pm
 
@@ -84,15 +84,18 @@ sub new {
         Object::Meta::Named::setName( $self, $hshprms{'name'} );
     }
     else {
+
+        # Create empty 'name' and 'hash' fields
         Object::Meta::Named::setName $self;
     }
 
-    #Give the Object back
     return $self;
 }
 
 #----------------------------------------------------------------------------
 #Administration Methods
+
+=head2 Administration Methods
 
 =head3 set ( DATA )
 
@@ -151,6 +154,8 @@ sub setName {
 
 #----------------------------------------------------------------------------
 #Consultation Methods
+
+=head2 Consultation Methods
 
 =head3 getName ()
 
