@@ -24,7 +24,7 @@ Object::Meta - Library to manage raw data and meta data as one object but keepin
 
 package Object::Meta;
 
-our $VERSION = '1.1.0';
+our $VERSION = '1.1.1';
 
 #----------------------------------------------------------------------------
 #Dependencies
@@ -234,23 +234,29 @@ sub Clear {
 #----------------------------------------------------------------------------
 #Consultation Methods
 
-=pod
-
 =head2 Consultation Methods
 
-=over 4
-
-=item get ( FIELD_NAME [, DEFAULT_VALUE [. IS_META ] ] )
+=head3 get ( FIELD_NAME [, DEFAULT_VALUE [. IS_META ] ] )
 
 This Method retrieves the value of the field with name C<FIELD_NAME> for this object.
 It can be a B<Physical Field> or a B<Meta Field>.
 
-C<FIELD_NAME> - is the name of the Field which value it must return.
+B<Parameters:>
 
-C<DEFAULT_VALUE> - is the default value to return if the Field does not exist.
+=over 4
+
+=item C<FIELD_NAME>
+
+The name of the Field which value it must return.
+
+=item C<DEFAULT_VALUE>
+
+The default value to return if the Field does not exist.
   (Otherwise it would return C<undef>)
 
-C<IS_META> - whether the C<FIELD_NAME> is a B<Meta Field>.
+=item C<IS_META>
+
+whether the C<FIELD_NAME> is a B<Meta Field>.
 
 =back
 
@@ -282,17 +288,21 @@ sub get {
     return $srs;
 }
 
-=pod
-
-=over 4
-
-=item getMeta ( FIELD_NAME [, DEFAULT_VALUE ] )
+=head3 getMeta ( FIELD_NAME [, DEFAULT_VALUE ] )
 
 This Method retrieves the value of the B<Meta Field> with name C<FIELD_NAME> for this object.
 
-C<FIELD_NAME> - is the name of the Field which value it must return.
+B<Parameters:>
 
-C<DEFAULT_VALUE> - is the default value to return if the Field does not exist.
+=over 4
+
+=item C<FIELD_NAME>
+
+The name of the Field which value it must return.
+
+=item C<DEFAULT_VALUE>
+
+The default value to return if the Field does not exist.
   (Otherwise it would return C<undef>)
 
 =back
@@ -314,11 +324,7 @@ sub getMeta {
     return $srs;
 }
 
-=pod
-
-=over 4
-
-=item getIndexField ()
+=head3 getIndexField ()
 
 This method retrieves the Name of the B<Index Field> with the object will be indexed.
 
@@ -326,23 +332,15 @@ The name of the B<Index Field> is a B<Meta Field> which is stored separately.
 
 B<Returns:> The Name of the B<Index Field> or an empty String if the Field is not set.
 
-=back
-
 =cut
 
 sub getIndexField {
     return Object::Meta::getMeta( $_[0], 'indexfield', '' );
 }
 
-=pod
-
-=over 4
-
-=item getIndexValue ()
+=head3 getIndexValue ()
 
 This method retrieves the Value of the B<Index Field> by which the object will be indexed.
-
-=back
 
 =cut
 
