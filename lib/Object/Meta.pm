@@ -127,15 +127,17 @@ sub set {
     }
 }
 
-=pod
+=head3 setMeta ( DATA )
+
+This method will assign values to B<Meta Data Fields>.
+
+B<Parameters:>
 
 =over 4
 
-=item setMeta ( DATA )
+=item C<DATA>
 
-This method will asign values to B<Meta Data Fields>.
-
-C<DATA> is a list which is passed in a hash like fashion, using key and value pairs.
+A list which is passed in a hash like fashion, using key and value pairs.
 
 =back
 
@@ -153,15 +155,17 @@ sub setMeta {
     }
 }
 
-=pod
-
-=over 4
-
-=item setIndexField ( INDEX_FIELD )
+=head3 setIndexField ( INDEX_FIELD )
 
 This method configure the B<Index Field> for this object.
 
-C<INDEX_FIELD> - is the name of the Field which contains the Value by which the object
+B<Parameters:>
+
+=over 4
+
+=item C<INDEX_FIELD>
+
+The name of the Field which contains the Value by which the object
 will be indexed.
 
 =back
@@ -177,15 +181,17 @@ sub setIndexField {
 
 }
 
-=pod
-
-=over 4
-
-=item setIndexValue ( INDEX_VALUE )
+=head3 setIndexValue ( INDEX_VALUE )
 
 This Method assigns the value for the B<Index Field> for this object.
 
-C<INDEX_VALUE> - is the scalar value of the Field by which the object will be indexed.
+B<Parameters:>
+
+=over 4
+
+=item C<INDEX_VALUE>
+
+The scalar value of the Field by which the object will be indexed.
 
 =back
 
@@ -201,6 +207,16 @@ sub setIndexValue {
         Object::Meta::set( $self, $sindexfield, $sindexvalue );
     }
 }
+
+=head3 Clear ()
+
+This method removes all raw data and meta data.
+
+Only the index field configuration is still kept.
+
+See L<Method C<setIndexField()>|/"setIndexField ( INDEX_FIELD )">
+
+=cut
 
 sub Clear {
     my $self = $_[0];
