@@ -1,14 +1,13 @@
 #
 # @author Bodo (Hugo) Barwich
-# @version 2025-10-21
+# @version 2026-01-26
 # @package Object::Meta
-# @subpackage Object/Meta.pm
+# @subpackage lib/Object/Meta.pm
 
 # This Module defines Classes to manage Data in an indexed List
 #
 #---------------------------------
 # Requirements:
-# - The Perl Package "libconst-fast-perl" must be installed
 #
 #---------------------------------
 # Features:
@@ -25,7 +24,7 @@ Object::Meta - Library to manage raw data and meta data as one object but keepin
 
 package Object::Meta;
 
-our $VERSION = '1.0.1';
+our $VERSION = '1.1.0';
 
 #----------------------------------------------------------------------------
 #Dependencies
