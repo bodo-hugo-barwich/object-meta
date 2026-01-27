@@ -19,7 +19,9 @@ use Cwd qw(abs_path);
 use File::Find;
 
 use Test::More;
+use Test::Pod;
 use Pod::Coverage;
+
 
 BEGIN {
     use lib "lib";
@@ -54,10 +56,12 @@ print "# Found Modules:\n", join( "\n", @modules_found ), "\n";
 my %modules_expected = (
     'Object::Meta' => {
         package           => 'Object::Meta',
+        file => 'lib/Object/Meta.pm',
         expected_coverage => 1
     },
     'Object::Meta::List' => {
         package            => 'Object::Meta::List',
+        file => 'lib/Object/Meta/List.pm',
         expected_coverage  => 0.333333333333333,
         expected_uncovered => {
             setIndexField         => 0,
@@ -74,18 +78,23 @@ my %modules_expected = (
     },
     'Object::Meta::Named' => {
         package           => 'Object::Meta::Named',
+        file => 'lib/Object/Meta/Named.pm',
         expected_coverage => 1
     },
     'Object::Meta::Named::List' => {
         package           => 'Object::Meta::Named::List',
+        file => 'lib/Object/Meta/Named/List.pm',
         expected_coverage => 1
     },
 );
 
 subtest 'Module POD Coverage' => sub {
     for $module_name (@modules_found) {
+
         subtest "Module '$module_name'" => sub {
-            isnt( $modules_expected{$module_name}, undef, "Module '$module_name' has expected Coverage" );
+            pod_file_ok( $modules_expected{$module_name}{file}, "Module '$module_name': POD is valid" );
+
+            isnt( $modules_expected{$module_name}, undef, "Module '$module_name': Coverage as expected" );
 
             # Check the POD Coverage
             my $coverage = Pod::Coverage->new( %{ $modules_expected{$module_name} } );
@@ -102,8 +111,8 @@ subtest 'Module POD Coverage' => sub {
                 isnt( $modules_expected{$module_name}{expected_uncovered}{$method},
                     undef, "Method '$module_name :: $method ()' is uncovered as expected" );
             }
-
         };
+
     }
 };
 
