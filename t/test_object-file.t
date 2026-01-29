@@ -78,7 +78,7 @@ subtest 'Constructors' => sub {
         is( ref $obj, 'Object::Meta::File', "object 'Object::Meta::File': created correctly" );
 
         is( $obj->getName(),          'file2',       "Field 'name': set correctly" );
-        is( $obj->getDirectoryName(), 'directory2/', "Field 'name': set correctly" );
+        is( $obj->getDirectoryName(), 'directory2/', "Field 'directoryname': set correctly" );
         is( $obj->getIndexValue(),    $obj2hash,     "Field 'hash': has the index value" );
     };
 };
@@ -116,7 +116,7 @@ subtest 'Set Name' => sub {
         $obj->setDirectoryName('directory3');
 
         is( $obj->getName(),          'file3',       "Field 'name': set correctly" );
-        is( $obj->getDirectoryName(), 'directory3/', "Field 'name': set correctly" );
+        is( $obj->getDirectoryName(), 'directory3/', "Field 'directoryname': set correctly" );
         is( $obj->getIndexValue(),    $obj3hash,     "Field 'hash': has the index value" );
     };
 };
