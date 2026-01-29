@@ -24,7 +24,7 @@ Object::Meta - Library to manage raw data and meta data as one object but keepin
 
 package Object::Meta;
 
-our $VERSION = '1.1.2';
+our $VERSION = '1.2.0';
 
 #----------------------------------------------------------------------------
 #Dependencies
@@ -69,10 +69,9 @@ using key and value pairs.
 
 sub new {
     my $class = ref( $_[0] ) || $_[0];
-    my $self  = undef;
 
     #Set the Default Attributes and assign the initial Values
-    $self = [ {}, {} ];
+    my $self = [ {}, {} ];
 
     #Bestow Objecthood
     bless $self, $class;

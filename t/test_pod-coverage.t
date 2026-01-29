@@ -80,11 +80,21 @@ my %modules_expected = (
         file              => 'lib/Object/Meta/Named.pm',
         expected_coverage => 1
     },
+    'Object::Meta::File' => {
+        package           => 'Object::Meta::File',
+        file              => 'lib/Object/Meta/File.pm',
+        expected_coverage => 1
+    },
     'Object::Meta::Named::List' => {
         package           => 'Object::Meta::Named::List',
         file              => 'lib/Object/Meta/Named/List.pm',
         expected_coverage => 1
     },
+    'Object::Meta::File::List' => {
+        package           => 'Object::Meta::File::List',
+        file              => 'lib/Object/Meta/File/List.pm',
+        expected_coverage => 1
+    }
 );
 
 subtest 'Module POD Coverage' => sub {
