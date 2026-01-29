@@ -1,6 +1,6 @@
 #
 # @author Bodo (Hugo) Barwich
-# @version 2026-01-26
+# @version 2026-01-29
 # @package Object::Meta
 # @subpackage lib/Object/Meta.pm
 
@@ -24,7 +24,7 @@ Object::Meta - Library to manage raw data and meta data as one object but keepin
 
 package Object::Meta;
 
-our $VERSION = '1.1.1';
+our $VERSION = '1.1.2';
 
 #----------------------------------------------------------------------------
 #Dependencies
@@ -279,7 +279,7 @@ sub get {
             }
         }
     }
-    else     #A Meta Field is requested
+    else    #A Meta Field is requested
     {
         #Check a Meta Field
         $srs = Object::Meta::getMeta( $self, $sfieldname, $sdefault );
@@ -347,7 +347,7 @@ This method retrieves the Value of the B<Index Field> by which the object will b
 sub getIndexValue {
     my $sindexfield = Object::Meta::getIndexField $_[0];
 
- #print "idx fld: '$sindexfield'; idx vl: '" . $_[0]->get($sindexfield) . "'\n";
+    #print "idx fld: '$sindexfield'; idx vl: '" . $_[0]->get($sindexfield) . "'\n";
 
     return Object::Meta::get( $_[0], $sindexfield );
 }
