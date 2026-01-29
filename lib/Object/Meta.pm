@@ -69,10 +69,9 @@ using key and value pairs.
 
 sub new {
     my $class = ref( $_[0] ) || $_[0];
-    my $self  = undef;
 
     #Set the Default Attributes and assign the initial Values
-    $self = [ {}, {} ];
+    my $self = [ {}, {} ];
 
     #Bestow Objecthood
     bless $self, $class;

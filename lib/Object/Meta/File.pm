@@ -73,20 +73,18 @@ See L<Method C<Object::Meta::Named::new()>|Object::Meta::Named/"new ( [ DATA ] )
 =cut
 
 sub new {
-    my $invocant = shift;
-    my $class    = ref($invocant) || $invocant;
-    my $self     = undef;
+    my $class = ref( $_[0] ) || $_[0];
 
     #Take the Method Parameters
-    my %hshprms = @_;
+    my %hshprms = @_[ 1 .. $#_ ];
 
-    $self = $class->SUPER::new(@_);
+    my $self = $class->SUPER::new(%hshprms);
 
     if ( defined $hshprms{'directoryname'} ) {
-        $self->setDirectoryName( $hshprms{'directoryname'} );
+        Object::Meta::File::setDirectoryName( $self, $hshprms{'directoryname'} );
     }
     else {
-        $self->setDirectoryName;
+        Object::Meta::File::setDirectoryName $self;
     }
 
     #Give the Object back
@@ -97,6 +95,27 @@ sub new {
 #Administration Methods
 
 =head2 Administration Methods
+
+=head3 set ( DATA )
+
+This overrides the base method C<Object::Meta::Named::set()> to recognize the
+C<name> and C<directoryname> field.
+
+See L<Method C<Object::Meta::Named::set()>|Object::Meta::Named/"set ( DATA )">
+
+See L<Method C<Object::Meta::set()>|Object::Meta/"set ( DATA )">
+
+=cut
+
+sub set {
+    my ( $self, %hshprms ) = @_;
+
+    if ( defined $hshprms{'directoryname'} ) {
+        Object::Meta::File::setDirectoryName( $self, delete $hshprms{'directoryname'} );
+    }
+
+    Object::Meta::Named::set( $self, %hshprms );
+}
 
 =head3 setDirectoryName ( [ DIRECTORY ] )
 
@@ -119,13 +138,13 @@ If C<DIRECTORY> does not have a trailing slash C< / > it will be added.
 =cut
 
 sub setDirectoryName {
-    my $self = shift;
+    my $self = $_[0];
 
-    if ( scalar(@_) > 0 ) {
-        $self->set( 'directoryname', shift );
+    if ( scalar(@_) > 1 ) {
+        Object::Meta::set( $self, 'directoryname', $_[1] );
     }
     else {
-        $self->set( 'directoryname', '' );
+        Object::Meta::set( $self, 'directoryname', '' );
     }
 
     if ( $self->[Object::Meta::LIST_DATA]{'directoryname'} ne '' ) {
