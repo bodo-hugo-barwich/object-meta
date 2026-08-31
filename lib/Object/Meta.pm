@@ -37,7 +37,7 @@ use constant LIST_META_DATA => 1;
 
 C<Object::Meta> implements a Class to manage a data and additional meta data as an object
 
-Of special importance it the B<Index Field> which is use to create an automatical index
+Of special importance is the B<Index Field> which is use to create an automatical index
 in the C<Object::Meta::List>.
 
 It does not require lengthly creation of definition modules.

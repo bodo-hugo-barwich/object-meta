@@ -19,8 +19,6 @@ use strict;
 
 use Cwd qw(abs_path);
 
-use Time::HiRes qw(gettimeofday);
-
 use Test::More;
 
 BEGIN
@@ -42,9 +40,6 @@ my $spath = abs_path($0);
 ($smodule = $spath) =~ s/.*\/([^\/]+)$/$1/;
 $spath =~ s/^(.*\/)$smodule$/$1/;
 
-#Disable Warning Message Translation
-$ENV{'LANGUAGE'} = 'C';
-
 
 my $obj = undef;
 my %objdata = ('field1' => 'value1', 'field2' => 'value2', 'field3' => 'value3');
@@ -55,7 +50,7 @@ subtest 'Constructors' => sub {
 	#Test: 'Constructors'
 
   subtest 'empty object' => sub {
-	  $obj = Object::Meta->new(%objdata);
+	  $obj = Object::Meta->new();
 
 	  is(ref $obj, 'Object::Meta', "object 'Object::Meta': created correctly");
 
@@ -73,6 +68,4 @@ subtest 'Constructors' => sub {
 };
 
 
-
 done_testing();
-
