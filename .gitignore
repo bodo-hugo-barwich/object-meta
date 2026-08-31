@@ -2,11 +2,13 @@
 .project
 .includepath
 .settings
+.vscode
 *.tdy
 *.save
 
 #Packaging Files
 MYMETA.*
+MANIFEST
 MANIFEST.bak
 Makefile
 pm_to_blib

@@ -1,17 +1,33 @@
 use ExtUtils::MakeMaker;
- 
-
 
 WriteMakefile(
     NAME             => 'Object::Meta',
     LICENSE          => 'perl',
     AUTHOR           => 'Bodo (Hugo) Barwich <b.barwich@hotmail.com>',
     VERSION_FROM     => 'lib/Object/Meta.pm',
-    MIN_PERL_VERSION => '5.10',
-    test             => {TESTS => 't/*.t'},
-    META_MERGE          => {
-        resources       => {
-            repository  => "https://github.com/bodo-hugo-barwich/object-meta",
+    MIN_PERL_VERSION => '5.010',
+    test             => { TESTS => 't/*.t' },
+    BUILD_REQUIRES   => {
+        'ExtUtils::MakeMaker' => '6.46',
+        'Test::More'          => '0',
+        'Test::Pod'           => '0',
+        'Pod::Coverage'       => '0',
+    },
+    PREREQ_PM => {
+        'Data::Dump'  => '0',
+        'Digest::MD5' => '0',
+    },
+    META_MERGE => {
+        'meta-spec' => { version => 2 },
+        resources   => {
+            repository => {
+                type => 'git',
+                url  => 'https://github.com/bodo-hugo-barwich/object-meta.git',
+                web  => 'https://github.com/bodo-hugo-barwich/object-meta',
+            },
+            bugtracker => {
+                web => 'https://github.com/bodo-hugo-barwich/object-meta/issues'
+            },
         },
     },
 );
